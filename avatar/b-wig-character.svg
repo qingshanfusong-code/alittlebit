@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="40%" r="75%">
+      <stop offset="0" stop-color="#FFD27A"/>
+      <stop offset="1" stop-color="#FF9F43"/>
+    </radialGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+
+  <!-- 身体：深蓝外套 + 白色领巾 -->
+  <path d="M 230 1024 C 240 860 360 790 512 790 C 664 790 784 860 794 1024 Z" fill="#22357E"/>
+  <path d="M 450 792 L 512 900 L 574 792 Z" fill="#FFFFFF"/>
+  <path d="M 470 800 Q 512 860 554 800 Q 540 900 512 940 Q 484 900 470 800 Z" fill="#F4F1EA"/>
+
+  <!-- 假发后片 -->
+  <g fill="#F7F4EC" stroke="#D9D2C1" stroke-width="6">
+    <ellipse cx="512" cy="430" rx="250" ry="250"/>
+    <rect x="300" y="430" width="424" height="300" rx="110"/>
+  </g>
+  <!-- 脖子 -->
+  <rect x="462" y="700" width="100" height="110" rx="30" fill="#F5C49B"/>
+
+  <!-- 大耳朵（听劝），右侧露出 -->
+  <g>
+    <ellipse cx="742" cy="500" rx="78" ry="108" fill="#F7C9A2" stroke="#E0A57C" stroke-width="8"/>
+    <path d="M 722 438 C 772 430 790 490 760 520 C 742 540 760 570 740 585" fill="none" stroke="#D98E62" stroke-width="12" stroke-linecap="round"/>
+  </g>
+
+  <!-- 脸 -->
+  <ellipse cx="512" cy="510" rx="200" ry="215" fill="#FFD9B8"/>
+  <!-- 腮红 -->
+  <ellipse cx="400" cy="590" rx="42" ry="24" fill="#FF8E8E" opacity="0.45"/>
+  <ellipse cx="624" cy="590" rx="42" ry="24" fill="#FF8E8E" opacity="0.45"/>
+  <!-- 眉毛：微微挑起，认真在听 -->
+  <path d="M 395 440 Q 430 418 465 435" fill="none" stroke="#6B4A32" stroke-width="14" stroke-linecap="round"/>
+  <path d="M 560 428 Q 600 405 635 428" fill="none" stroke="#6B4A32" stroke-width="14" stroke-linecap="round"/>
+  <!-- 眼睛 -->
+  <ellipse cx="432" cy="508" rx="26" ry="32" fill="#2A2238"/>
+  <ellipse cx="596" cy="508" rx="26" ry="32" fill="#2A2238"/>
+  <circle cx="442" cy="496" r="9" fill="#FFFFFF"/>
+  <circle cx="606" cy="496" r="9" fill="#FFFFFF"/>
+  <!-- 嘴：小小的"哦~" -->
+  <ellipse cx="512" cy="625" rx="24" ry="28" fill="#B4473F"/>
+  <ellipse cx="512" cy="636" rx="14" ry="12" fill="#FF8E8E"/>
+
+  <!-- 假发顶部卷 + 两侧横卷（18 世纪学者造型） -->
+  <g fill="#FFFFFF" stroke="#D9D2C1" stroke-width="6">
+    <circle cx="390" cy="320" r="78"/>
+    <circle cx="480" cy="282" r="84"/>
+    <circle cx="575" cy="290" r="80"/>
+    <circle cx="652" cy="340" r="66"/>
+    <circle cx="335" cy="395" r="58"/>
+    <!-- 左侧横卷 -->
+    <rect x="236" y="470" width="120" height="70" rx="35"/>
+    <rect x="236" y="550" width="120" height="70" rx="35"/>
+  </g>
+  <!-- 横卷的卷筒截面 -->
+  <g fill="#FFFFFF" stroke="#D9D2C1" stroke-width="6">
+    <circle cx="271" cy="505" r="35"/>
+    <circle cx="271" cy="585" r="35"/>
+  </g>
+  <g fill="none" stroke="#CFC6B2" stroke-width="6" stroke-linecap="round">
+    <path d="M 271 505 m -14 0 a 14 14 0 1 1 14 14 a 22 22 0 1 1 22 -22"/>
+    <path d="M 271 585 m -14 0 a 14 14 0 1 1 14 14 a 22 22 0 1 1 22 -22"/>
+  </g>
+
+  <!-- AI 朋友的劝：气泡 + 声波飘向耳朵 -->
+  <g fill="none" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round" opacity="0.95">
+    <path d="M 838 445 Q 862 500 838 555"/>
+    <path d="M 875 420 Q 908 500 875 580"/>
+  </g>
+  <g transform="translate(810,290) scale(0.85) translate(-830,-245)">
+    <path d="M 740 150 h 180 a 40 40 0 0 1 40 40 v 100 a 40 40 0 0 1 -40 40 h -110 l -50 45 l 8 -45 h -28 a 40 40 0 0 1 -40 -40 v -100 a 40 40 0 0 1 40 -40 z" fill="#2E58D8"/>
+    <g fill="none" stroke="#FFFFFF" stroke-linecap="round" stroke-width="20">
+      <path d="M 804 195 C 822 189 836 196 843 214 L 878 292"/>
+      <path d="M 849 230 L 812 292"/>
+    </g>
+  </g>
+</svg>

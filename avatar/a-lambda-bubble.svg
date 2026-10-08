@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <radialGradient id="bg" cx="35%" cy="28%" r="85%">
+      <stop offset="0" stop-color="#4C7BF0"/>
+      <stop offset="0.55" stop-color="#2647B0"/>
+      <stop offset="1" stop-color="#141F5C"/>
+    </radialGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#0A1240" flood-opacity="0.45"/>
+    </filter>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <!-- 等高线 + 约束曲线：拉格朗日乘数法的几何图 -->
+  <g fill="none" stroke="#FFFFFF" stroke-opacity="0.13" stroke-width="5">
+    <ellipse cx="512" cy="512" rx="120" ry="80"/>
+    <ellipse cx="512" cy="512" rx="220" ry="150"/>
+    <ellipse cx="512" cy="512" rx="330" ry="225"/>
+    <ellipse cx="512" cy="512" rx="450" ry="305"/>
+    <ellipse cx="512" cy="512" rx="580" ry="395"/>
+  </g>
+  <path d="M 40 900 Q 420 560 1000 180" fill="none" stroke="#FFD24A" stroke-opacity="0.6" stroke-width="7" stroke-dasharray="4 22" stroke-linecap="round"/>
+  <!-- 对话气泡 -->
+  <g filter="url(#shadow)">
+    <path d="M 512 200
+             C 700 200 830 310 830 470
+             C 830 630 700 740 512 740
+             C 470 740 430 735 394 724
+             L 250 820
+             L 285 680
+             C 225 630 194 556 194 470
+             C 194 310 324 200 512 200 Z" fill="#FFFFFF"/>
+  </g>
+  <!-- λ -->
+  <g fill="none" stroke="#1E3A9E" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 405 315 C 450 300 482 318 500 360 L 625 640" stroke-width="58"/>
+    <path d="M 520 450 L 405 640" stroke-width="58"/>
+  </g>
+  <!-- AI 闪光 -->
+  <path d="M 760 210 Q 772 262 824 274 Q 772 286 760 338 Q 748 286 696 274 Q 748 262 760 210 Z" fill="#FFD24A"/>
+  <path d="M 850 340 Q 856 364 880 370 Q 856 376 850 400 Q 844 376 820 370 Q 844 364 850 340 Z" fill="#FFD24A" opacity="0.85"/>
+</svg>
