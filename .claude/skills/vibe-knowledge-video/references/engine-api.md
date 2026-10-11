@@ -1,7 +1,7 @@
 # 第三步：写 scenes.js（引擎 API 速查）
 
-**不要读 `studio/engine/engine.js` 源码**，这份速查已经够用。
-完整范例：`studio/videos/brachistochrone/scenes.js`（一个完整视频）和 `studio/videos/_showcase/scenes.js`（全部组件、五种色调各一段）。要用某个组件时，先 grep 范例里的用法，照着写。
+**不要读 `$SKILL/studio/engine/engine.js` 源码**，这份速查已经够用。
+完整范例：`$SKILL/studio/examples/brachistochrone/scenes.js`（一个完整视频）和 `$SKILL/studio/examples/showcase/scenes.js`（全部组件、五种色调各一段）。要用某个组件时，先 grep 范例里的用法，照着写。
 
 ## 0. 心智模型
 
@@ -81,19 +81,23 @@ SCENES.race = c => {
 5. 不要让主体压到安全区：底部字幕 880–1010px；headline 大字 150–430px；左上 64–420 × 40–260；右上 1500–1860 × 40–230。
 6. 新元素默认就是可见的。需要入场动画的元素，用 `c.show()`（它会先把元素设成透明），或者先 `c.set(el, {opacity:0})`。
 
-## 5. 命令（在**仓库根目录**运行，已经免确认）
+## 5. 命令（在用户的工作文件夹里运行）
 
 ```bash
-node studio/tools/render.mjs videos/<名> --timing            # 节拍时间表（纯文本，最省）
-node studio/tools/render.mjs videos/<名> --sheet             # 每个节拍一格的联系表 → out/sheet-1.jpg（16 格一张）
-node studio/tools/render.mjs videos/<名> --sheet --at 9.5,10.2,11 --w 960   # 指定时间点，放大看细节
-node studio/tools/render.mjs videos/<名> --preview           # 960×540@15fps 预览（带配乐），约 15–30 秒出片
-node studio/tools/render.mjs videos/<名> --from 20 --to 32   # 只渲染一段
-node studio/tools/render.mjs videos/<名>                     # 正式版 1080p30（耗时约为视频时长的 4 倍）
-node studio/tools/render.mjs videos/<名> --cover             # 封面图（标题卡定格）
-node studio/tools/render.mjs --serve                         # 浏览器实时预览：空格播放，←→ 跳 1 秒（无配乐）
+# 下面的 RENDER 代表 render.mjs 的绝对路径：<本 skill 目录>/studio/tools/render.mjs
+# 每条命令都要写出完整路径（每次调用都是新的 shell，变量不会保留），路径加引号
+node "RENDER" videos/<名> --timing            # 节拍时间表（纯文本，最省）
+node "RENDER" videos/<名> --sheet             # 每个节拍一格的联系表 → out/sheet-1.jpg（16 格一张）
+node "RENDER" videos/<名> --sheet --at 9.5,10.2,11 --w 960   # 指定时间点，放大看细节
+node "RENDER" videos/<名> --preview           # 960×540@15fps 预览（带配乐），约 15–30 秒出片
+node "RENDER" videos/<名> --from 20 --to 32   # 只渲染一段
+node "RENDER" videos/<名>                     # 正式版 1080p30（耗时约为视频时长的 4 倍）
+node "RENDER" videos/<名> --cover             # 封面图（标题卡定格）
+node "RENDER" --serve                         # 浏览器实时预览当前文件夹里的项目（空格播放，←→ 跳 1 秒；无配乐）
+node "RENDER" examples/brachistochrone --timing   # 内置范例（找不到本地目录时，会按 skill 目录去找）
 ```
 
-`videos/<名>` 总是相对于 `studio/` 目录的路径，在哪个目录运行命令都一样。
+- 项目目录按**当前目录**解析，用户的视频放在工作文件夹的 `videos/<名>/` 下，产物在 `videos/<名>/out/`。
+- Windows 上也一样，用 `node "C:\Users\…\vibe-knowledge-video\studio\tools\render.mjs" videos/<名> --preview` 这样的写法。
 
 页面报错时，渲染命令会打印出 JS 错误栈和行号。直接按报错去修，不要猜。

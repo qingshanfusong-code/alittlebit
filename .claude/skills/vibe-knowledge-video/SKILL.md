@@ -5,26 +5,40 @@ description: 制作“Vibe知识大赏”风格的抖音知识短片（黑金暗
 
 # Vibe 知识短片
 
-风格规则已经从参考视频里提炼好了，在 `references/style-dna.md`。生产工具在仓库的 `studio/` 目录：引擎（HTML/GSAP）、逐帧渲染器（Playwright + ffmpeg）、配乐生成器、音效库、范例项目。
+**路径约定**：`$SKILL` = 本 skill 所在目录的绝对路径，也就是加载 skill 时显示的 Base directory。个人安装时通常是 `~/.claude/skills/vibe-knowledge-video`。写命令时要换成**真实的绝对路径**，路径加引号。
+
+- 风格规则：`$SKILL/references/style-dna.md`。这是从参考视频里提炼出来的，不要重新分析。
+- 生产工具：`$SKILL/studio/`。包括引擎、逐帧渲染器、配乐生成器、音效库、范例。
+- **用户的视频项目放在当前工作文件夹的 `videos/<名>/` 下**（启动 Claude Code 的那个文件夹），不要放进 skill 目录。
 
 **账号偏好（用户明确要求）**：
-- 默认用暖色暗场：`gilt` 黑棕鎏金，带桌面舞台和光池；或 `ember` 炭黑琥珀。
-- **不要用蓝色背景**（`night`、`abyss`）。
-- 声音要舒缓：自动配乐加少量柔和音效，不要密集音效。
+- 默认用暖色暗场：`gilt` 黑棕鎏金加桌面光池，或 `ember` 炭黑琥珀。
+- **不要用蓝色背景**。
+- 声音要舒缓：自动配乐，加极少量柔和音效。
+
+## 第 0 步：首次使用自动安装
+
+如果 `$SKILL/studio/node_modules` 不存在，或者渲染时报“还没安装依赖”或“找不到浏览器”，就运行：
+
+```
+node "$SKILL/studio/tools/setup.mjs"
+```
+
+这个脚本会自动装依赖（默认源失败时换国内镜像）、找浏览器（本机有 Chrome 或 Edge 就直接用）、检查 ffmpeg，并用内置范例试跑。它输出带 ✗ 的项目时，把提示原样转告用户，比如“缺 ffmpeg，运行 winget install Gyan.FFmpeg”。
 
 ## 流程：一个视频 = 一个对话窗口，分三个阶段
 
-所有命令都在**仓库根目录**运行（项目已经允许这些命令免确认）：`node studio/tools/render.mjs videos/<名> …`
+下面的 RENDER 指 `"$SKILL/studio/tools/render.mjs"`，都在用户的工作文件夹里运行。
 
-### A. 选题 + 文案 + 分镜 → `studio/videos/<名>/script.json`
-1. 读 `references/script-guide.md`，以及 `references/style-dna.md` 的第 2 节。
+### A. 选题 + 文案 + 分镜 → `videos/<名>/script.json`
+1. 读 `$SKILL/references/script-guide.md`，以及 style-dna 的第 2 节。
 2. 写 script.json。每个节拍都要有 `say`（文案）和 `v`（画面备注）。
-3. 运行 `--timing`，把文案和时长表给用户确认。
-4. **用户确认文案之前，不写任何画面代码。**
-5. 文案定稿后，提醒用户：可以输入 `/clear` 清空上下文，再进入阶段 B。script.json 已经保存了全部信息，清空后不会丢东西。
+3. 运行 `node RENDER videos/<名> --timing`，把文案和时长表给用户确认。
+4. **用户确认文案之前，不写画面代码。**
+5. 文案定稿后，提醒用户可以输入 `/clear` 再进入阶段 B。script.json 已经保存了全部信息，清空不会丢东西。
 
-### B. 画面 → `studio/videos/<名>/scenes.js`
-1. 读 `references/engine-api.md`，以及 `references/style-dna.md` 的第 3、4、6 节。用到某个组件时，去 `studio/videos/_showcase/scenes.js` 或 `studio/videos/brachistochrone/scenes.js` 里 grep 写法。
+### B. 画面 → `videos/<名>/scenes.js`
+1. 读 `$SKILL/references/engine-api.md`，以及 style-dna 的第 3、4、6 节。用到某个组件时，在 `$SKILL/studio/examples/` 里 grep 范例写法。
 2. 按 script.json 里的 `v`，逐个场景写 scenes.js。
 3. **强制自检（每次写完或改完画面都要做，不需要用户提醒）**：
    - 运行 `--sheet` 出联系表，然后 Read 这张图。
@@ -37,34 +51,27 @@ description: 制作“Vibe知识大赏”风格的抖音知识短片（黑金暗
 1. 用户按**节拍 id 或时间点**提意见。
 2. 只改对应的位置：文案和时长改 script.json，画面用 Edit 改 scenes.js 里对应的几行。
 3. 改完照样自检，但只看改动的地方：`--sheet --at <那几个时间点>`。然后再出 `--preview`。
-4. 用户确认后：先正式渲染，再 `--cover` 出封面。交付 `studio/videos/<名>/out/<名>.mp4` 和 `out/cover.jpg`。
+4. 用户确认后：先正式渲染（`node RENDER videos/<名>`），再 `--cover` 出封面。交付 `videos/<名>/out/<名>.mp4` 和 `out/cover.jpg`。
 
 ## 省 token 硬规则
 
-1. **不读** `engine.js`、`engine.css`、`render.mjs`、`music.mjs` 的源码，API 都在 engine-api.md 里。
-2. **不看**参考视频，也不重新分析风格。只有用户明确要“学习新参考”时，才用 `studio/tools/analyze_ref.sh`，并且只看它生成的联系表。
+1. **不读** `$SKILL/studio` 里 engine、tools 的源码，API 都在 engine-api.md 里。
+2. **不看**参考视频，也不重新分析风格。只有用户明确要“学习新参考”时，才运行 `node "$SKILL/studio/tools/analyze_ref.mjs" 视频.mp4`，并且只看它生成的联系表和 report.txt。
 3. **不整文件重写** scenes.js 或 script.json，用 Edit 做局部修改。
-4. **看图只看联系表**：一张联系表约 1.5k token。不逐帧截图，不看 mp4。查细节用 `--sheet --at t1,t2 --w 960`。
+4. **看图只看联系表**：一张约 1.5k token。不逐帧截图，不看 mp4。查细节用 `--sheet --at t1,t2 --w 960`。
 5. 先 `--timing`（纯文本），确实需要时才 `--sheet`（出图）。正式渲染只在用户确认之后做一次。
-6. **复用组件**，不发明新特效，现有组件已经覆盖参考视频的手法（style-dna 3.2 节）。
+6. **复用组件**，不发明新特效（style-dna 3.2 节列出了全部可用组件）。
 7. 回复要简短：说清楚改了什么，附上文件路径，不要把代码贴回对话里。
 
 ## 声音（script.json 的 meta 里配置，默认值已经可用）
 
-- `music`：默认 `"piano"`，会按视频时长自动生成毛毡钢琴加弦乐铺底的舒缓配乐。标题卡处有轻微的“绽放”，结尾落在主和弦上。可以改成 `"ambient"`（更空灵、没有琶音），或 `"none"`（不要配乐）。
-  - `musicSeed: <数字>` 可以换一段旋律。
-- `bgm: "music.mp3"`：用你自己的音乐文件（放在项目目录里），优先级高于自动配乐。`bgmGain` 调音量，默认 0.6。
-- `sfx`：默认 `"soft"`，只在标题、盖章、碎裂这几处有轻柔音效。可选 `"off"`（无音效）、`"manual"`（只要手动加的）、`"full"`（全部）。
-- 成片会自动做响度标准化，到 -16 LUFS。
+- `music`：默认 `"piano"`，按视频时长自动生成毛毡钢琴加弦乐铺底的舒缓配乐。可以改成 `"ambient"`（更空灵）或 `"none"`（不要配乐）。`musicSeed: <数字>` 可以换一段旋律。
+- `bgm: "music.mp3"`：用用户自己的音乐文件（放在项目目录里），优先级高于自动配乐。`bgmGain` 调音量，默认 0.6。
+- `sfx`：默认 `"soft"`，只在标题、盖章、碎裂这几处有轻柔音效。可选 `"off"`、`"manual"`、`"full"`。
+- 成片会自动响度标准化，到 -16 LUFS。
 
 ## 发布建议（交付时提醒用户）
 
-- 视频是 16:9 横屏，1080p，自带配乐，可以直接发。如果想用抖音热门 BGM，发布时选“使用同款”音乐，把原声调到 0–30%。
-- 标题格式参考：`Vibe知识大赏｜<钩子句>`，再加话题标签。具体规则以抖音 App 里的当期活动为准。
-- 封面用 `out/cover.jpg`，也就是标题卡定格。
-
-## 环境
-
-- 第一次使用：在 `studio/` 下运行 `npm install`。本地电脑还要运行 `npx playwright install chromium`，并安装 ffmpeg（详见仓库根目录的 `使用指南.md`）。
-- 新项目：复制 `studio/videos/brachistochrone/` 改名，或者直接新建 `script.json` 和 `scenes.js`。
-- 音效不够用时：把同名 wav 放进 `studio/videos/<名>/sfx/`，可以覆盖全局音效。
+- 视频是 16:9 横屏，1080p，自带配乐，可以直接发。想用抖音热门 BGM 的话，发布时选“使用同款”，把原声调到 0–30%。
+- 标题参考：`Vibe知识大赏｜<钩子句>`，再加话题标签。具体规则以抖音 App 里的当期活动为准。
+- 封面用 `out/cover.jpg`。

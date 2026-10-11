@@ -139,4 +139,4 @@
 
 ## 7. 新增参考（以后学习新视频时追加在这里）
 
-用 `bash studio/tools/analyze_ref.sh 视频.mp4` 生成联系表和音频报告，只看 `sheet_*.jpg` 和 `audio.txt`，把**新的**发现追加成一条，不要重写上面的内容。
+用 `node "$SKILL/studio/tools/analyze_ref.mjs" 视频.mp4` 生成联系表和报告，只看 `sheet_*.jpg` 和 `report.txt`，把**新的**发现追加成一条，不要重写上面的内容。

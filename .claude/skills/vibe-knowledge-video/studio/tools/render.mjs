@@ -1,16 +1,17 @@
 #!/usr/bin/env node
 /* ============================================================
    逐帧确定性渲染：HTML 动画 → MP4（无掉帧、无录屏 UI、可重复渲染）
-   用法（在仓库根目录运行 node studio/tools/render.mjs …，或在 studio/ 下运行 node tools/render.mjs …，效果相同）：
-     node tools/render.mjs videos/<名>              正式渲染 1920x1080@30 → videos/<名>/out/<名>.mp4
-     node tools/render.mjs videos/<名> --preview    快速预览 960x540@15  → out/preview.mp4
-     node tools/render.mjs videos/<名> --sheet      关键帧联系表（每个节拍 1 格）→ out/sheet-1.jpg …
-     node tools/render.mjs videos/<名> --sheet --at 3,8.5,12 --w 960   指定时间点、放大单格看细节
-     node tools/render.mjs videos/<名> --from 10 --to 20      只渲染一段（改完局部时用）
-     node tools/render.mjs videos/<名> --fps 60                60 帧
-     node tools/render.mjs videos/<名> --timing     只打印节拍时间表（不截图，最省）
-     node tools/render.mjs videos/<名> --cover      导出封面 out/cover.jpg（默认取标题卡定格）
-     node tools/render.mjs --serve [--port 8020]     浏览器实时预览（空格播放，←→ 跳 1 秒）
+   用法（R = 本文件路径，项目目录可以在任何地方，相对路径按“当前目录”解析）：
+     node R videos/<名>              正式渲染 1920x1080@30 → videos/<名>/out/<名>.mp4
+     node R videos/<名> --preview    快速预览 960x540@15  → out/preview.mp4（带配乐）
+     node R videos/<名> --sheet      关键帧联系表（每个节拍 1 格）→ out/sheet-1.jpg …
+     node R videos/<名> --sheet --at 3,8.5,12 --w 960   指定时间点、放大单格看细节
+     node R videos/<名> --from 10 --to 20      只渲染一段（改完局部时用）
+     node R videos/<名> --fps 60                60 帧
+     node R videos/<名> --timing     只打印节拍时间表（不截图，最省）
+     node R videos/<名> --cover      导出封面 out/cover.jpg（默认取标题卡定格）
+     node R --serve [--port 8020]     浏览器实时预览当前目录下的项目（空格播放，←→ 跳 1 秒）
+   内置范例：examples/brachistochrone、examples/showcase（找不到时按 skill 目录解析）
    ============================================================ */
 import http from 'node:http';
 import fs from 'node:fs';
@@ -18,61 +19,70 @@ import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');   // studio/
 const argv = process.argv.slice(2);
 const flag = k => argv.includes('--' + k);
 const opt = (k, d) => { const i = argv.indexOf('--' + k); return i >= 0 && argv[i + 1] && !argv[i + 1].startsWith('--') ? argv[i + 1] : d; };
-const proj = argv.find(a => !a.startsWith('--') && !/^[\d.,]+$/.test(a));
+const proj = argv.find((a, i) => !a.startsWith('--') && !(i > 0 && argv[i - 1].startsWith('--') && ['at', 'w', 'cols', 'rows', 'fps', 'from', 'to', 'port'].includes(argv[i - 1].slice(2))));
 
-/* ---------- 静态服务器 ---------- */
+/* ---------- 静态服务器：/w/ → 项目所在目录，其余 → studio/（引擎、字体、音效） ---------- */
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json',
   '.woff2': 'font/woff2', '.woff': 'font/woff', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.svg': 'image/svg+xml', '.wav': 'audio/wav', '.mp3': 'audio/mpeg', '.webp': 'image/webp' };
-function serve(port = 0) {
+function serve(workDir, port = 0) {
   return new Promise(res => {
     const srv = http.createServer((req, rsp) => {
       const p = decodeURIComponent(new URL(req.url, 'http://x').pathname);
-      const f = path.join(ROOT, path.normalize(p));
-      if (!f.startsWith(ROOT) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) { rsp.writeHead(404); return rsp.end('404'); }
-      rsp.writeHead(200, { 'Content-Type': MIME[path.extname(f)] || 'application/octet-stream', 'Cache-Control': 'no-store' });
+      const [base, rel] = p.startsWith('/w/') ? [workDir, p.slice(3)] : [ROOT, p.slice(1)];
+      const f = path.join(base, path.normalize('/' + rel));
+      if (!f.startsWith(base) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) { rsp.writeHead(404); return rsp.end('404'); }
+      rsp.writeHead(200, { 'Content-Type': MIME[path.extname(f).toLowerCase()] || 'application/octet-stream', 'Cache-Control': 'no-store' });
       fs.createReadStream(f).pipe(rsp);
     }).listen(port, '127.0.0.1', () => res(srv));
   });
 }
+const hasScript = d => fs.existsSync(path.join(d, 'script.json'));
+const shown = f => { const r = path.relative(process.cwd(), f); return r.startsWith('..') ? f : r; };   // 打印给用户看的路径
 
 if (flag('serve')) {
-  const srv = await serve(+opt('port', 8020));
-  const port = srv.address().port;
-  const list = fs.existsSync(path.join(ROOT, 'videos')) ? fs.readdirSync(path.join(ROOT, 'videos')).filter(d => fs.existsSync(path.join(ROOT, 'videos', d, 'script.json'))) : [];
-  console.log('预览地址（空格播放/暂停，←→ 跳 1 秒，拖动进度条）：');
-  list.forEach(d => console.log(`  http://127.0.0.1:${port}/engine/index.html?p=videos/${d}`));
+  const cwd = process.cwd(), srv = await serve(cwd, +opt('port', 8020)), port = srv.address().port;
+  const rel = d => path.relative(cwd, d).split(path.sep).join('/');
+  const found = [];
+  for (const top of [cwd, path.join(cwd, 'videos')]) if (fs.existsSync(top))
+    for (const d of fs.readdirSync(top)) { const full = path.join(top, d); if (fs.statSync(full).isDirectory() && hasScript(full)) found.push(`w/${rel(full)}`); }
+  for (const d of fs.readdirSync(path.join(ROOT, 'examples'))) found.push(`examples/${d}`);
+  console.log('预览地址（空格播放/暂停，←→ 跳 1 秒，拖动进度条；按 Ctrl+C 结束）：');
+  found.forEach(p => console.log(`  http://127.0.0.1:${port}/engine/index.html?p=${encodeURI(p)}`));
   await new Promise(() => {});
 }
-if (!proj) { console.error('用法：node tools/render.mjs videos/<项目名> [--preview|--sheet|--timing]'); process.exit(1); }
-const projDir = path.join(ROOT, proj), name = path.basename(projDir), outDir = path.join(projDir, 'out');
-if (!fs.existsSync(path.join(projDir, 'script.json'))) { console.error('找不到 ' + path.join(proj, 'script.json')); process.exit(1); }
+if (!proj) { console.error('用法：node render.mjs <项目目录> [--preview|--sheet|--timing|--cover]'); process.exit(1); }
+let projDir = path.resolve(process.cwd(), proj);
+if (!hasScript(projDir) && hasScript(path.join(ROOT, proj))) projDir = path.join(ROOT, proj);
+if (!hasScript(projDir)) { console.error('找不到 ' + path.join(projDir, 'script.json')); process.exit(1); }
+const name = path.basename(projDir), outDir = path.join(projDir, 'out');
 fs.mkdirSync(outDir, { recursive: true });
 
-/* ---------- 浏览器 ---------- */
-const { chromium } = await import('playwright');
+/* ---------- 浏览器：优先 Playwright 自带 Chromium，没有就用本机的 Chrome / Edge ---------- */
+let chromium;
+try { ({ chromium } = await import('playwright')); }
+catch { console.error('还没安装依赖。请先运行：node "' + path.join(ROOT, 'tools', 'setup.mjs') + '"'); process.exit(1); }
 async function launch() {
   const args = ['--font-render-hinting=none', '--disable-lcd-text', '--force-color-profile=srgb', '--autoplay-policy=no-user-gesture-required'];
-  try { return await chromium.launch({ args }); }
-  catch (e) {
-    for (const p of [process.env.CHROMIUM_PATH, '/opt/pw-browsers/chromium'].filter(Boolean))
-      if (fs.existsSync(p)) return chromium.launch({ args, executablePath: p });
-    console.error('启动 Chromium 失败。本机首次使用请运行：npx playwright install chromium'); throw e;
-  }
+  const tries = [{}, ...[process.env.CHROMIUM_PATH, '/opt/pw-browsers/chromium'].filter(p => p && fs.existsSync(p)).map(p => ({ executablePath: p })),
+    { channel: 'chrome' }, { channel: 'msedge' }];
+  let first;
+  for (const t of tries) { try { return await chromium.launch({ args, ...t }); } catch (e) { first ??= e; } }
+  console.error('找不到可用的浏览器。请运行：node "' + path.join(ROOT, 'tools', 'setup.mjs') + '"，或安装 Chrome / Edge。'); throw first;
 }
 const PREVIEW = flag('preview'), SHEET = flag('sheet') || flag('cover'), COVER = flag('cover'), TIMING = flag('timing');
 const SW = COVER ? 1920 : +opt('w', 480);   // 联系表单格宽度；看细节时用 --w 960 或 1920
 const [VW, VH] = SHEET ? [SW, Math.round(SW * 9 / 16)] : PREVIEW ? [960, 540] : [1920, 1080];
-const srv = await serve();
+const srv = await serve(path.dirname(projDir));
 const browser = await launch();
 const page = await browser.newPage({ viewport: { width: VW, height: VH }, deviceScaleFactor: 1 });
 const logs = [];
 page.on('console', m => { if (m.type() === 'error' || m.type() === 'warning') logs.push(`[${m.type()}] ${m.text()}`); });
 page.on('pageerror', e => logs.push('[pageerror] ' + e.message));
-await page.goto(`http://127.0.0.1:${srv.address().port}/engine/index.html?p=${encodeURIComponent(proj.replace(/\\/g, '/'))}&render=1`);
+await page.goto(`http://127.0.0.1:${srv.address().port}/engine/index.html?p=${encodeURIComponent('w/' + name)}&render=1`);
 const ok = await page.evaluate(() => window.__ready);
 if (!ok) { const err = await page.evaluate(() => window.__error); console.error(err, '\n' + logs.filter(l => !l.includes(err.split('\n')[0])).join('\n')); await browser.close(); process.exit(1); }
 const info = await page.evaluate(() => ({ duration: window.__duration, fps: window.__fps, cues: window.__cues, beats: window.__beats, meta: window.__meta }));
@@ -100,7 +110,7 @@ if (COVER) {
   await page.evaluate(t => window.__seek(t), t);
   const out = path.join(outDir, 'cover.jpg');
   fs.writeFileSync(out, await page.screenshot({ type: 'jpeg', quality: 95 }));
-  console.log(`封面（${t.toFixed(1)}s）：${path.relative(ROOT, out)}`);
+  console.log(`封面（${t.toFixed(1)}s）：${shown(out)}`);
   await browser.close(); srv.close(); process.exit(0);
 }
 
@@ -121,7 +131,7 @@ if (SHEET) {
     const n = Math.min(per, times.length - s * per), rows = Math.ceil(n / cols), out = path.join(outDir, `sheet-${s + 1}.jpg`);
     await run('ffmpeg', ['-y', '-v', 'error', '-start_number', String(s * per), '-i', path.join(tmp, 'f%03d.jpg'), '-frames:v', '1',
       '-vf', `tile=${cols}x${rows}:padding=4:color=0x333333`, '-q:v', '3', out]);
-    sheets.push(path.relative(ROOT, out));
+    sheets.push(shown(out));
   }
   fs.rmSync(tmp, { recursive: true, force: true });
   console.log('联系表：' + sheets.join('  '));
@@ -192,4 +202,4 @@ if (labels.length) {
     '-c:v', 'copy', '-c:a', 'aac', '-t', dur, '-movflags', '+faststart', final]);
 }
 fs.rmSync(silent, { force: true });
-console.log(`完成：${path.relative(ROOT, final)}  （${fmt(to - from)}，${fps}fps，用时 ${((Date.now() - t0) / 1000).toFixed(0)}s）`);
+console.log(`完成：${shown(final)}  （${fmt(to - from)}，${fps}fps，用时 ${((Date.now() - t0) / 1000).toFixed(0)}s）`);
