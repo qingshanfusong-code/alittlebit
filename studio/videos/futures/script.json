@@ -3,7 +3,8 @@
     "title": "期货",
     "theme": "gilt",
     "brand": "听劝的拉格朗日",
-    "fps": 30
+    "fps": 30,
+    "bgm": "music.mp3"
   },
   "beats": [
     {
