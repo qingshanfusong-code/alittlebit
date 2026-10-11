@@ -1,0 +1,16 @@
+{
+  "name": "vibe-video-studio",
+  "private": true,
+  "type": "module",
+  "description": "HTML 动画 → 逐帧确定性渲染 → MP4（配合 .claude/skills/vibe-knowledge-video 使用）",
+  "scripts": {
+    "serve": "node tools/render.mjs --serve",
+    "sfx": "python3 tools/make_sfx.py"
+  },
+  "dependencies": {
+    "@fontsource/cormorant-garamond": "^5.2.0",
+    "@fontsource/noto-serif-sc": "^5.2.0",
+    "gsap": "^3.13.0",
+    "playwright": "1.56.1"
+  }
+}

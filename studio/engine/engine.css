@@ -1,0 +1,110 @@
+/* ============================================================
+   Vibe 知识短片引擎 · 样式层
+   规则：这里禁止使用 CSS transition / animation（会破坏逐帧确定性渲染），
+   一切运动都由 engine.js 的 GSAP 时间轴驱动。
+   ============================================================ */
+
+:root {
+  --zh: "Noto Serif SC", "Source Han Serif SC", "Songti SC", "STSong", serif;
+  --la: "Cormorant Garamond", "EB Garamond", "Times New Roman", serif;
+}
+
+/* ---------- 主题（style-dna.md 第 4 节） ---------- */
+.theme-night   { --bg0:#06080f; --bg1:#0e1424; --bg2:#1a2238; --ink:#ece6d8; --dim:#8b93a8; --accent:#f2c46b; --accent2:#8fa8d8; --seal:#b8322a; --glow:rgba(255,196,110,.55); }
+.theme-crimson { --bg0:#050303; --bg1:#1a0707; --bg2:#4a1414; --ink:#f4eeea; --dim:#a08c8a; --accent:#e58e84; --accent2:#ffffff; --seal:#c0392b; --glow:rgba(255,120,110,.45); }
+.theme-mono    { --bg0:#020202; --bg1:#0c0c0c; --bg2:#1e1e1e; --ink:#f0f0f0; --dim:#8a8a8a; --accent:#ffffff; --accent2:#bdbdbd; --seal:#d0d0d0; --glow:rgba(255,255,255,.55); }
+.theme-abyss   { --bg0:#02050b; --bg1:#07101e; --bg2:#0f1d33; --ink:#e9edf3; --dim:#7d8aa0; --accent:#ecc37a; --accent2:#63d6e8; --seal:#b8322a; --glow:rgba(236,195,122,.55); }
+.theme-gilt    { --bg0:#070504; --bg1:#140d08; --bg2:#33210f; --ink:#f0e4c8; --dim:#9c8a6c; --accent:#dcb36a; --accent2:#e8d3a0; --seal:#b8322a; --glow:rgba(220,170,90,.55); }
+.theme-paper   { --bg0:#e6e3db; --bg1:#efede7; --bg2:#fbfaf7; --ink:#141414; --dim:#6f6c66; --accent:#000000; --accent2:#3a3a3a; --seal:#b8322a; --glow:rgba(0,0,0,.0); }
+
+html, body { margin:0; padding:0; background:#000; overflow:hidden; }
+body { width:100vw; height:100vh; }
+
+#stage {
+  position:absolute; left:0; top:0; width:1920px; height:1080px; overflow:hidden;
+  transform-origin:0 0; color:var(--ink); font-family:var(--zh);
+  -webkit-font-smoothing:antialiased; text-rendering:geometricPrecision;
+}
+#stage * { box-sizing:border-box; }
+.layer { position:absolute; inset:0; width:1920px; height:1080px; }
+
+/* 背景：中心偏上的柔光 + 暗角 */
+#bg { background: radial-gradient(ellipse 75% 70% at 50% 42%, var(--bg2) 0%, var(--bg1) 48%, var(--bg0) 100%); }
+#bgPaper { background: radial-gradient(ellipse 80% 75% at 50% 45%, #fbfaf7 0%, #efede7 55%, #dcd9d0 100%); opacity:0; }
+#vignette { pointer-events:none; background: radial-gradient(ellipse 85% 80% at 50% 50%, rgba(0,0,0,0) 55%, rgba(0,0,0,.55) 100%); }
+canvas.layer { display:block; }
+
+/* ---------- 字幕（旁白=字幕，无配音） ---------- */
+.sub { position:absolute; left:160px; right:160px; text-align:center; opacity:0; }
+.sub.bottom { bottom:96px; font-size:42px; font-weight:500; letter-spacing:.06em; line-height:1.55;
+  text-shadow:0 2px 12px rgba(0,0,0,.85); }
+.sub.headline { top:150px; font-size:62px; font-weight:700; letter-spacing:.08em; line-height:1.5;
+  text-shadow:0 4px 24px rgba(0,0,0,.8); }
+.sub.center { top:50%; transform:translateY(-50%); font-size:68px; font-weight:300; letter-spacing:.18em; line-height:1.6; }
+.sub .en { display:block; font-family:var(--la); font-style:italic; font-weight:500; font-size:.56em;
+  letter-spacing:.02em; color:var(--dim); margin-top:.25em; }
+.sub .hl { color:var(--accent); font-weight:800; text-shadow:0 0 18px var(--glow), 0 2px 10px rgba(0,0,0,.8); }
+.sub.center .hl { font-weight:500; }
+.sub .ch { display:inline-block; white-space:pre; }
+.theme-paper .sub, .inverted .sub { text-shadow:none; }
+
+/* ---------- 包装元素（纪录片“外壳”） ---------- */
+.chapter { position:absolute; left:64px; top:46px; opacity:0; }
+.chapter .zh { font-size:32px; font-weight:800; letter-spacing:.12em; }
+.chapter .la { font-family:var(--la); font-style:italic; font-size:19px; color:var(--dim); margin-top:2px; letter-spacing:.04em; }
+.chapter .rule { position:absolute; left:0; top:52px; height:1px; width:260px; background:linear-gradient(90deg, var(--dim), transparent); opacity:.6; }
+
+#brand { position:absolute; right:64px; top:48px; font-size:17px; letter-spacing:.3em; padding:5px 6px 5px 12px;
+  border:1px solid var(--dim); color:var(--dim); opacity:.75; }
+#brand.br { top:auto; bottom:36px; border:none; letter-spacing:.12em; font-family:var(--zh); }
+
+.cite { position:absolute; right:64px; top:104px; text-align:right; opacity:0; }
+.cite .la { font-family:var(--la); font-style:italic; font-size:25px; color:var(--ink); opacity:.85; }
+.cite .zh { font-size:26px; font-weight:600; margin-top:2px; }
+.cite .note { font-size:16px; color:var(--dim); margin-top:6px; padding-top:6px; border-top:1px solid rgba(160,160,160,.35); letter-spacing:.08em; }
+.cite .seal { position:absolute; right:-44px; top:2px; width:30px; height:30px; background:var(--seal); color:#f6e9e0;
+  font-size:13px; line-height:13px; padding:2px; writing-mode:vertical-rl; text-align:center; font-weight:700; border-radius:2px; }
+
+.era { position:absolute; left:64px; top:136px; opacity:0; }
+.era .year { font-family:var(--la); font-weight:600; font-size:76px; line-height:1; color:var(--accent2); letter-spacing:.04em;
+  font-variant-numeric:lining-nums; display:flex; }
+.era .place { font-size:22px; color:var(--dim); letter-spacing:.14em; margin-top:10px; padding-top:8px; border-top:1px solid rgba(160,160,160,.35); }
+.digit { display:inline-block; height:1em; line-height:1; overflow:hidden; position:relative; }
+.digit > span { display:block; }
+.digit > span > span { display:block; height:1em; line-height:1; }
+
+/* ---------- 标题卡 ---------- */
+.titlecard { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; opacity:0; }
+.titlecard .la { font-family:var(--la); font-size:22px; letter-spacing:.55em; color:var(--dim); margin-bottom:26px; text-transform:uppercase; }
+.titlecard .main { font-size:150px; font-weight:900; letter-spacing:.14em; line-height:1.1; padding-left:.14em;
+  color:var(--ink); text-shadow:0 0 40px var(--glow), 0 0 4px rgba(255,255,255,.25); }
+.theme-gilt .titlecard .main, .theme-abyss .titlecard .main {
+  background:linear-gradient(180deg, #fff3d0 0%, var(--accent) 55%, #8a6a33 100%); -webkit-background-clip:text; background-clip:text; color:transparent;
+  text-shadow:none; filter:drop-shadow(0 0 22px var(--glow)); }
+.titlecard .line { width:460px; height:1px; margin:30px 0 22px; background:linear-gradient(90deg, transparent, var(--dim), transparent); position:relative; }
+.titlecard .line i { position:absolute; top:-3px; left:0; width:7px; height:7px; border-radius:50%; background:var(--accent); box-shadow:0 0 12px var(--glow); }
+.titlecard .sub2 { font-size:28px; letter-spacing:.3em; color:var(--ink); opacity:.85; }
+.titlecard .by { font-size:17px; letter-spacing:.3em; color:var(--dim); margin-top:18px; }
+
+/* ---------- 组件 ---------- */
+.stamp { position:absolute; padding:10px 14px; border:4px solid var(--seal); color:var(--seal); font-weight:900; font-size:40px;
+  letter-spacing:.1em; line-height:1.1; writing-mode:vertical-rl; border-radius:6px; background:rgba(184,50,42,.06); opacity:0;
+  box-shadow:0 0 0 2px rgba(184,50,42,.25) inset; }
+.stamp.solid { background:var(--seal); color:#f8ece4; border-color:var(--seal); }
+.bgword { position:absolute; left:0; right:0; text-align:center; font-family:var(--la); font-weight:600; font-size:150px;
+  letter-spacing:.2em; color:var(--ink); opacity:0; white-space:nowrap; }
+.card { position:absolute; background:linear-gradient(180deg,#efe6d2,#d9cdb3); color:#2a2118; border-radius:4px;
+  box-shadow:0 30px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(0,0,0,.2); padding:40px 48px; font-size:28px; line-height:1.7; }
+.label { position:absolute; font-size:22px; letter-spacing:.12em; color:var(--dim); white-space:nowrap; }
+.label.la { font-family:var(--la); font-style:italic; letter-spacing:.04em; font-size:24px; }
+.big { position:absolute; font-family:var(--la); font-weight:600; color:var(--ink); line-height:1; white-space:nowrap; font-variant-numeric:lining-nums; }
+.glowdot { position:absolute; width:16px; height:16px; margin:-8px 0 0 -8px; border-radius:50%; background:#fff;
+  box-shadow:0 0 10px 3px var(--glow), 0 0 30px 8px var(--glow); }
+.inverted .glowdot { background:#111; box-shadow:none; }
+
+/* 预览模式的播放条（渲染时隐藏） */
+#hud { position:fixed; left:0; right:0; bottom:0; height:34px; background:rgba(0,0,0,.75); color:#ccc; font:13px/34px monospace;
+  display:flex; gap:12px; padding:0 12px; z-index:99; }
+#hud input { flex:1; }
+.render #hud { display:none; }
+#label { position:absolute; left:20px; top:20px; font:700 64px/1 monospace; color:#ff0; background:rgba(0,0,0,.7); padding:6px 10px; display:none; z-index:50; }
