@@ -91,9 +91,9 @@ node "RENDER" videos/<名> --sheet             # 每个节拍一格的联系表 
 node "RENDER" videos/<名> --sheet --at 9.5,10.2,11 --w 960   # 指定时间点，放大看细节
 node "RENDER" videos/<名> --preview           # 960×540@15fps 预览（带配乐），约 15–30 秒出片
 node "RENDER" videos/<名> --from 20 --to 32   # 只渲染一段
-node "RENDER" videos/<名>                     # 正式版 1080p30（耗时约为视频时长的 4 倍）
+node "RENDER" videos/<名>                     # 正式版 1080p30（耗时约为视频时长的 4 倍，用后台运行）
 node "RENDER" videos/<名> --cover             # 封面图（标题卡定格）
-node "RENDER" --serve                         # 浏览器实时预览当前文件夹里的项目（空格播放，←→ 跳 1 秒；无配乐）
+# node "RENDER" --serve   ← 给用户在另一个终端用的实时预览，不会自动结束。Claude 绝不要运行它
 node "RENDER" examples/brachistochrone --timing   # 内置范例（找不到本地目录时，会按 skill 目录去找）
 ```
 

@@ -56,7 +56,9 @@ unzip -o ~/Downloads/vibe-knowledge-video.zip -d ~/.claude/skills
 
 ## 四、每期视频怎么做
 
-在你的视频文件夹里运行 `claude`，然后：
+**一个视频 = 一个对话，从头做到尾，中间不要 `/clear`。** 每个阶段结束时，Claude 会把进度写进 `videos/<名>/STATUS.md`。就算对话断了、或者第二天再来，它也能接着做。
+
+在你的视频文件夹里运行 `claude`（或者在桌面版里打开这个文件夹），然后：
 
 **① 写文案**
 ```
@@ -64,32 +66,46 @@ unzip -o ~/Downloads/vibe-knowledge-video.zip -d ~/.claude/skills
 ```
 Claude 会给你看文案和时长表。直接用中文改，满意后说“文案定稿”。
 
-**② 清空上下文**：输入 `/clear`。文案已经存进 `videos/bayes/script.json`，不会丢。
-
-**③ 做画面**
+**② 做画面**：在同一个对话里接着说
 ```
-/vibe-knowledge-video 做 videos/bayes 的阶段 B
+进入阶段 B
 ```
-Claude 会写画面、自己出拼图检查并修改，然后渲染预览。打开 `videos/bayes/out/preview.mp4` 看效果。
+Claude 会写画面、自己出拼图检查并修改，然后渲染预览。打开 `videos/bayes/out/preview.mp4` 看效果。这一步通常要 5–15 分钟。
 
-**④ 改稿**：用时间点或节拍编号，一次把意见说完。例如：
+**③ 改稿**：用时间点或节拍编号，一次把意见说完。例如：
 ```
 0:24 停太久；c3 的图放大一倍；结尾换一段旋律
 ```
 
-**⑤ 成片**：说“可以了，渲染正式版和封面”，然后到 `videos/bayes/out/` 里拿 `bayes.mp4` 和 `cover.jpg`。
+**④ 成片**：说“可以了，渲染正式版和封面”，然后到 `videos/bayes/out/` 里拿 `bayes.mp4` 和 `cover.jpg`。
+
+**⑤ 下一期**：新开一个对话（或输入 `/clear`），从 ① 重新开始。
+
+**隔天接着做 / 对话断了**：在同一个文件夹里新开对话，输入：
+```
+/vibe-knowledge-video 继续 videos/bayes
+```
+Claude 会先读 STATUS.md，再从上次停下的地方接着做。
 
 **边看边定位**（可选）：另开一个终端，在视频文件夹里运行下面的命令（Mac 路径换成 `~/.claude/skills/...`）：
 ```
 node "C:\Users\<你>\.claude\skills\vibe-knowledge-video\studio\tools\render.mjs" --serve
 ```
-浏览器打开它打印出来的地址，底部会显示当前节拍编号和字幕。
+浏览器打开它打印出来的地址，底部会显示当前节拍编号和字幕。用完按 Ctrl+C 关掉。
+
+### 速度与额度
+
+- **推理强度选 High**：输入框右下角的 Extra 或 Max 会让每一步都想很久，明显变慢，也更费额度。这个流程的步骤已经写得很细，High 就够了；只是小改动可以用 Medium。
+- **意见一次说完**：5 条意见放在一条消息里，比分 5 次说快得多，也省得多。
+- **卡住了怎么办**：如果某一步超过 5 分钟没有新动作，按 `Esc` 停下，然后说“继续 videos/<名>”，它会从 STATUS.md 接着做。
 
 ## 五、常见问题
 
 | 现象 | 解决 |
 |---|---|
 | 输入 `/vibe` 看不到这个 skill | 检查 `SKILL.md` 的位置是否和第二节说的完全一致，然后重启 `claude` |
+| 一步跑了十几分钟 | 先把推理强度从 Extra 改成 High；按 `Esc` 停下，再说“继续 videos/<名>” |
+| `/clear` 之后 Claude 不知道做到哪了 | 说“/vibe-knowledge-video 继续 videos/<名>”。以后阶段之间不要 `/clear` |
 | 提示缺 ffmpeg / 找不到浏览器 | 跟 Claude 说“重新运行安装自检”，按提示处理 |
 | 画面上的字是方块 | 依赖没装好，重新运行安装自检 |
 | 想用自己的音乐 | 把 mp3 放进 `videos/<名>/`，跟 Claude 说“用 xxx.mp3 当配乐” |
