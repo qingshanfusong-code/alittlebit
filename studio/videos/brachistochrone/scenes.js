@@ -8,14 +8,16 @@ SCENES.race = c => {
   const cycD = 'M' + Array.from({ length: 91 }, (_, i) => cyc(Math.PI * i / 90).map(v => v.toFixed(1)).join(' ')).join(' L');
 
   const s = c.svg(`
-    <defs><filter id="glR" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="7"/></filter></defs>
+    <defs><filter id="glR" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="7"/></filter>
+      <radialGradient id="ivory" cx=".35" cy=".3" r=".75"><stop offset="0" stop-color="#fffaf0"/><stop offset=".55" stop-color="#d8cdb6"/><stop offset="1" stop-color="#6d6250"/></radialGradient>
+      <radialGradient id="goldball" cx=".35" cy=".3" r=".75"><stop offset="0" stop-color="#fff2c8"/><stop offset=".5" stop-color="#d9a94e"/><stop offset="1" stop-color="#6a4a17"/></radialGradient></defs>
     <path id="line" d="M${A} L${B}" fill="none" style="stroke:var(--ink);stroke-width:3" opacity=".6"/>
     <path id="cycGlow" d="${cycD}" fill="none" style="stroke:var(--accent);stroke-width:12" filter="url(#glR)" opacity="0"/>
     <path id="cyc" d="${cycD}" fill="none" style="stroke:var(--accent);stroke-width:4"/>
     <circle id="pA" cx="${A[0]}" cy="${A[1]}" r="8" style="fill:var(--ink)"/>
     <circle id="pB" cx="${B[0]}" cy="${B[1]}" r="8" style="fill:var(--ink)"/>
-    <circle id="ballL" cx="${A[0]}" cy="${A[1]}" r="14" style="fill:var(--ink)" opacity="0"/>
-    <circle id="ballC" cx="${A[0]}" cy="${A[1]}" r="14" style="fill:var(--accent)" opacity="0"/>`);
+    <circle id="ballL" cx="${A[0]}" cy="${A[1]}" r="16" fill="url(#ivory)" opacity="0"/>
+    <circle id="ballC" cx="${A[0]}" cy="${A[1]}" r="16" fill="url(#goldball)" opacity="0"/>`);
   const $ = id => s.querySelector('#' + id);
 
   const la = c.h(`<div class="big" style="font-size:52px;font-style:italic">A</div>`); c.place(la, A[0] - 46, A[1] - 34);
@@ -44,8 +46,8 @@ SCENES.race = c => {
   });
   c.counter(tC.querySelector('.v'), 0, 1, go, 2, { decimals: 2, suffix: ' s', ease: 'linear' });
   c.counter(tL.querySelector('.v'), 0, TL / 2, go, TL, { decimals: 2, suffix: ' s', ease: 'linear' });
-  c.ripple(B[0], B[1], go + 2, { sfx: 'tick', r: 120 });
-  c.ripple(B[0], B[1], go + TL, { color: 'var(--ink)', count: 1, r: 90, sfx: 'tick' });
+  c.ripple(B[0], B[1], go + 2, { r: 120 });
+  c.ripple(B[0], B[1], go + TL, { color: 'var(--ink)', count: 1, r: 90 });
   // q4：输家变暗，赢家发光，标注“先陡、后缓”
   c.to([$('line'), $('ballL'), tL], { opacity: .22, duration: .8 }, c.at('q4'));
   c.to($('cycGlow'), { opacity: .9, duration: .8 }, c.at('q4'));
@@ -73,7 +75,7 @@ SCENES.letter = c => {
   const months = c.h(`<div style="position:absolute;left:1180px;top:470px;display:flex;gap:44px">${['I', 'II', 'III', 'IV', 'V', 'VI'].map(m =>
     `<div style="text-align:center"><div class="dot" style="width:22px;height:22px;border-radius:50%;margin:0 auto;border:2px solid var(--accent)"></div><div style="font-family:var(--la);font-size:26px;color:var(--dim);margin-top:12px">${m}</div></div>`).join('')}</div>`);
   c.show(months, c.at('c2', .4), .6);
-  c.$$('.dot').forEach((d, i) => { c.to(d, { backgroundColor: c.color('var(--accent)'), boxShadow: `0 0 18px ${c.color('var(--glow)')}`, duration: .2 }, c.at('c2', .8 + i * .25)); c.sfx('tick', c.at('c2', .8 + i * .25), .5); });
+  c.$$('.dot').forEach((d, i) => { c.to(d, { backgroundColor: c.color('var(--accent)'), boxShadow: `0 0 18px ${c.color('var(--glow)')}`, duration: .2 }, c.at('c2', .8 + i * .25)); });
 
   // c3：六个月 → 一个晚上（16:00 → 次日 04:00）
   c.hide(months, c.at('c3'), .5);
@@ -82,7 +84,6 @@ SCENES.letter = c => {
   c.show([clock, night], c.at('c3', .3), .7);
   const h0 = c.at('c3', .8);
   c.onFrame(t => { clock.textContent = String((16 + Math.floor(c.prog(t, h0, 2.2, 'inOut') * 12)) % 24).padStart(2, '0') + ':00'; });
-  for (let i = 1; i <= 12; i++) c.sfx('tick', h0 + 2.2 * i / 12, .35);
 
   // c4：匿名答卷
   c.hide([clock, night], c.at('c4'), .5);

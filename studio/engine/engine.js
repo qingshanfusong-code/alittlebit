@@ -42,7 +42,7 @@ function loadScript(src) {
 }
 
 /* ---------------- 全局状态 ---------------- */
-let stage, scenesRoot, titlesRoot, chromeRoot, subsRoot, fxCanvas, grainCanvas, flashEl, bgPaper;
+let floorEl, stage, scenesRoot, titlesRoot, chromeRoot, subsRoot, fxCanvas, grainCanvas, flashEl, bgPaper;
 let tl, meta, beats, byId = {}, groups = [], duration = 0, S = 1;
 const frameFns = [];      // (t) => void，每帧调用
 const sceneCanvases = []; // {g, cv, drawers}
@@ -62,7 +62,13 @@ function stageRect(el) {
   const r = el.getBoundingClientRect(), s = stage.getBoundingClientRect();
   return { x: (r.left - s.left) / S, y: (r.top - s.top) / S, w: r.width / S, h: r.height / S };
 }
-function sfx(name, at, gain = 1) { if (name) cues.push({ t: Math.max(0, at), name, gain }); }
+// 音效分级：key=关键时刻（标题/盖章/碎裂）、detail=细节（嘀嗒/裂纹/化灰/反转）、manual=场景里手动指定
+// meta.sfx："soft"（默认：key+manual）| "full"（全部）| "manual"（只要手动的）| "off"（无音效）
+function sfx(name, at, gain = 1, tier = 'manual') {
+  const mode = meta.sfx ?? (meta.autoSfx === false ? 'manual' : 'soft');
+  if (!name || mode === 'off' || (tier === 'detail' && mode !== 'full') || (tier === 'key' && mode === 'manual')) return;
+  cues.push({ t: Math.max(0, at), name, gain });
+}
 
 /* ---------------- 节拍时长：字数自动计算 ---------------- */
 function beatDur(b) {
@@ -157,7 +163,7 @@ function makeCtx(g, layer) {
       frameFns.push({ g, fn: t => { strip.style.transform = `translateY(${-prog(t, at, dur, o.ease || 'out') * (n - 1) * 1.25}em)`; } });
       if (o.sfx !== false) for (let i = 1; i < n; i++) {
         // 每换一个字一声 tick：反解 out 缓动的时间点
-        const p = i / (n - 1), u = 1 - Math.cbrt(1 - p); sfx(o.sfx || 'tick', at + u * dur, 0.5);
+        const p = i / (n - 1), u = 1 - Math.cbrt(1 - p); sfx(o.sfx || 'tick', at + u * dur, 0.5, o.sfx ? 'manual' : 'detail');
       }
       return c;
     },
@@ -167,7 +173,7 @@ function makeCtx(g, layer) {
       c.place(e, x, y); gsap.set(e, { rotation: o.rotate ?? -8, opacity: 0 });
       tl.fromTo(e, { opacity: 0, scale: 2.6 }, { opacity: 1, scale: 1, duration: .2, ease: 'power4.in', immediateRender: false }, at);
       tl.to(scenesRoot, { keyframes: [{ x: -9, y: 4, duration: .04 }, { x: 7, y: -3, duration: .04 }, { x: -3, y: 1, duration: .05 }, { x: 0, y: 0, duration: .05 }] }, at + .2);
-      if (o.sfx !== false) sfx('stamp', at + .17, 1);
+      if (o.sfx !== false) sfx('stamp', at + .17, 1, 'key');
       return e;
     },
     ripple(x, y, at, o = {}) {
@@ -232,7 +238,7 @@ function makeCtx(g, layer) {
         }
         x2.globalAlpha = 1;
       });
-      if (o.sfx !== false) sfx(o.sfx || 'whoosh', at, .6);
+      if (o.sfx !== false) sfx(o.sfx || 'whoosh', at, .6, o.sfx ? 'manual' : 'detail');
       return c;
     },
     shatter(el, at, o = {}) {
@@ -252,7 +258,7 @@ function makeCtx(g, layer) {
         const p = cs.firstChild; gsap.set(p, { strokeDasharray: 1200, strokeDashoffset: 1200 }); gsap.set(cs.lastChild, { opacity: 0 });
         tl.to(p, { strokeDashoffset: 0, duration: .35, ease: 'power3.out' }, at - .7);
         tl.to(cs.lastChild, { opacity: 1, duration: .1 }, at - .7);
-        sfx('crack', at - .7, .8);
+        sfx('crack', at - .7, .8, 'detail');
       }
       // 三角碎片：抖动网格 → clip-path 克隆
       const pts = []; for (let j = 0; j <= rows; j++) for (let i = 0; i <= cols; i++) {
@@ -280,7 +286,7 @@ function makeCtx(g, layer) {
         tl.to(k, { y: `+=${dy / L * f * 18 + 420 + R() * 300}`, duration: dur, ease: 'power2.in' }, at);
         tl.to(k, { opacity: 0, duration: dur * .45, ease: 'power1.in' }, at + dur * .55);
       });
-      if (o.sfx !== false) sfx('shatter', at, 1);
+      if (o.sfx !== false) sfx('shatter', at, 1, 'key');
       return c;
     },
     particlesText(text, o = {}) {
@@ -327,6 +333,12 @@ function makeCtx(g, layer) {
       e.style.top = (o.y ?? 230) + 'px'; if (o.size) e.style.fontSize = o.size + 'px';
       const at = o.at ?? g.start;
       tl.fromTo(e, { opacity: 0, scale: 1.06 }, { opacity: o.opacity ?? .07, scale: 1, duration: o.dur ?? 1.6, ease: 'power2.out', immediateRender: false }, at);
+      return e;
+    },
+    shadow(x, y, w = 240, o = {}) {   // 物体落在“桌面”上的接触阴影
+      const e = mk('div', 'shadow', layer); e.style.width = w + 'px'; e.style.height = (o.h ?? w * .16) + 'px';
+      c.place(e, x, y); gsap.set(e, { opacity: o.at == null ? (o.opacity ?? .8) : 0 });
+      if (o.at != null) tl.to(e, { opacity: o.opacity ?? .8, duration: o.dur ?? .8, ease: 'power2.out' }, o.at);
       return e;
     },
     sfx(name, at, gain = 1) { sfx(name, at, gain); return c; },
@@ -458,6 +470,8 @@ function buildChrome() {
 /* ---------------- 标题卡 ---------------- */
 function buildTitle(b) {
   const box = mk('div', 'layer', titlesRoot);
+  const warm = b.rays ?? meta.rays ?? ['gilt', 'ember'].includes(meta.theme);
+  const glow = warm ? [mk('div', 'halo', box), mk('div', 'rays', box)] : null;
   const card = mk('div', 'titlecard', box,
     `${b.latin ? `<div class="la">${esc(b.latin)}</div>` : ''}<div class="main">${[...b.title].map(ch => `<span class="ch">${esc(ch)}</span>`).join('')}</div>`
     + `<div class="line"><i></i></div>${b.sub ? `<div class="sub2">${esc(b.sub)}</div>` : ''}`
@@ -476,8 +490,13 @@ function buildTitle(b) {
   if (sub2) c.show(sub2, s + 2.0, .8);
   if (by) c.show(by, s + 2.3, .8);
   tl.to(card, { opacity: 0, scale: 1.04, filter: 'blur(10px)', duration: .7, ease: 'power1.in' }, b.end - .7);
+  if (glow) {   // 标题背后的光晕与放射光线，缓慢旋转
+    tl.fromTo(glow, { opacity: 0 }, { opacity: 1, duration: 1.4, ease: 'power2.out', immediateRender: false }, s + .6);
+    tl.fromTo(glow[1], { rotation: -5 }, { rotation: 5, duration: b.dur, ease: 'none', immediateRender: false }, s);
+    tl.to(glow, { opacity: 0, duration: .7, ease: 'power1.in' }, b.end - .7);
+  }
   c._finish();
-  if (meta.autoSfx !== false) sfx('shimmer', s + .05, .9);
+  sfx('shimmer', s + .05, .8, 'key');
   frameFns.push({ fn: t => { box.style.visibility = t >= s - .1 && t <= b.end + .1 ? 'visible' : 'hidden'; } });
 }
 
@@ -500,7 +519,7 @@ function buildAmbient() {
     if (!sw.flash) return;
     tl.fromTo(flashEl, { opacity: 0 }, { opacity: .9, duration: .22, ease: 'power2.in', immediateRender: false }, sw.at);
     tl.to(flashEl, { opacity: 0, duration: .7, ease: 'power2.out' }, sw.at + .22);
-    if (meta.autoSfx !== false) sfx('boom', sw.at + .1, .9);
+    sfx('boom', sw.at + .1, .9, 'detail');
   });
 }
 let curTheme = null;
@@ -514,7 +533,7 @@ function applyTheme(t) {
 }
 function drawAmbient(t) {
   const x = fxCanvas.getContext('2d'); x.clearRect(0, 0, W, H);
-  x.fillStyle = cssColor('var(--ink)');
+  x.fillStyle = cssColor('var(--dust)');
   for (const p of dust) {
     const px = ((p.x + p.vx * t) % W + W) % W, py = ((p.y + p.vy * t) % H + H) % H;
     x.globalAlpha = p.a * (.55 + .45 * Math.sin(t * p.w + p.ph)); x.beginPath(); x.arc(px, py, p.r, 0, 6.283); x.fill();
@@ -544,7 +563,7 @@ function seek(t) {
 async function boot(proj) {
   const base = (proj || '').replace(/\/$/, '');
   const script = await (await fetch(`../${base}/script.json?_=${Date.now()}`)).json();
-  meta = Object.assign({ theme: 'abyss', brand: '', brandPos: 'tr', subPos: 'bottom', fps: 30, tail: 1.0, title: '' }, script.meta || {});
+  meta = Object.assign({ theme: 'gilt', brand: '', brandPos: 'tr', subPos: 'bottom', fps: 30, tail: 1.0, title: '' }, script.meta || {});
   document.title = meta.title || base;
   await loadScript(`../${base}/scenes.js?_=${Date.now()}`);
 
@@ -552,6 +571,8 @@ async function boot(proj) {
   stage = mk('div', `theme-${meta.theme}`, document.body); stage.id = 'stage';
   mk('div', 'layer', stage).id = 'bg';
   bgPaper = mk('div', 'layer', stage); bgPaper.id = 'bgPaper';
+  floorEl = mk('div', '', stage, '<div class="surf"></div><div class="pool"></div><div class="edge"></div>'); floorEl.id = 'floor';
+  floorEl.style.top = Math.round(H * (meta.floorY ?? .64)) + 'px';
   fxCanvas = mk('canvas', 'layer', stage); fxCanvas.width = W; fxCanvas.height = H;
   scenesRoot = mk('div', 'layer', stage); scenesRoot.id = 'scenes';
   titlesRoot = mk('div', 'layer', stage);
@@ -571,6 +592,11 @@ async function boot(proj) {
   duration = t + meta.tail;
   tl = gsap.timeline({ paused: true });
   tl.set({}, {}, duration);  // 撑满时长
+  // 地板（桌面舞台）：暖色主题默认开启；节拍上写 "floor": false/true 切换
+  let fOn = meta.floor ?? ['gilt', 'ember'].includes(meta.theme);
+  gsap.set(floorEl, { opacity: fOn ? 1 : 0 });
+  beats.forEach(b => { if (typeof b.floor === 'boolean' && b.floor !== fOn) { fOn = b.floor;
+    tl.to(floorEl, { opacity: fOn ? 1 : 0, duration: .8, ease: 'power1.inOut' }, Math.max(0, b.start - .4)); } });
 
   // 场景分组：连续相同 scene 归为一组；无 scene 的节拍沿用上一个非标题节拍的 scene
   let prev = '@none', cur = null;
@@ -617,7 +643,7 @@ async function boot(proj) {
   cues.sort((a, b) => a.t - b.t);
   Object.assign(window, {
     __duration: duration, __fps: meta.fps, __cues: cues, __meta: meta,
-    __beats: beats.map(b => ({ id: b.id, scene: b.scene, start: +b.start.toFixed(3), end: +b.end.toFixed(3), say: b.say || b.title || '' })),
+    __beats: beats.map(b => ({ id: b.id, type: b.type || '', scene: b.scene, start: +b.start.toFixed(3), end: +b.end.toFixed(3), say: b.say || b.title || '' })),
     __seek: seek,
     __label: txt => { const l = document.getElementById('label'); l.style.display = txt ? 'block' : 'none'; l.textContent = txt || ''; },
   });

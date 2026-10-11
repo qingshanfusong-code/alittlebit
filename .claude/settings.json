@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node studio/tools/render.mjs *)",
+      "Bash(node tools/render.mjs *)",
+      "Bash(node studio/tools/music.mjs *)",
+      "Bash(bash studio/tools/analyze_ref.sh *)",
+      "Bash(python3 studio/tools/make_sfx.py)"
+    ]
+  }
+}

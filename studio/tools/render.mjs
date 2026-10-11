@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* ============================================================
    逐帧确定性渲染：HTML 动画 → MP4（无掉帧、无录屏 UI、可重复渲染）
-   用法（在 studio/ 目录下）：
+   用法（在仓库根目录运行 node studio/tools/render.mjs …，或在 studio/ 下运行 node tools/render.mjs …，效果相同）：
      node tools/render.mjs videos/<名>              正式渲染 1920x1080@30 → videos/<名>/out/<名>.mp4
      node tools/render.mjs videos/<名> --preview    快速预览 960x540@15  → out/preview.mp4
      node tools/render.mjs videos/<名> --sheet      关键帧联系表（每个节拍 1 格）→ out/sheet-1.jpg …
@@ -148,7 +148,7 @@ await run('ffmpeg', ['-y', '-v', 'error', '-f', 'image2pipe', '-framerate', Stri
 process.stdout.write(`\r  渲染 ${nFrames}/${nFrames} 帧  ${((Date.now() - t0) / 1000).toFixed(0)}s\n`);
 await browser.close(); srv.close();
 
-/* ---------- 混音：音效（+ 可选 BGM） ---------- */
+/* ---------- 混音：配乐 + 柔和音效 → 响度标准化到 -16 LUFS ---------- */
 const sfxPath = n => [path.join(projDir, 'sfx', n + '.wav'), path.join(projDir, 'sfx', n + '.mp3'), path.join(ROOT, 'sfx', n + '.wav'), path.join(ROOT, 'sfx', n + '.mp3')].find(f => fs.existsSync(f));
 const inputs = [], filters = [], labels = [];
 const missing = new Set();
@@ -157,20 +157,34 @@ for (const c of info.cues) {
   const f = sfxPath(c.name); if (!f) { missing.add(c.name); continue; }
   const k = inputs.length / 2 + 1; inputs.push('-i', f);   // 0 号输入是无声视频
   const ms = Math.round((c.t - from) * 1000);
-  filters.push(`[${k}:a]aresample=48000,aformat=channel_layouts=stereo,volume=${(c.gain * (info.meta.sfxGain ?? .8)).toFixed(3)},adelay=delays=${ms}:all=1[a${k}]`);
+  filters.push(`[${k}:a]aresample=48000,aformat=channel_layouts=stereo,volume=${(c.gain * (info.meta.sfxGain ?? .5)).toFixed(3)},adelay=delays=${ms}:all=1[a${k}]`);
   labels.push(`[a${k}]`);
 }
 if (missing.size) console.warn('  缺少音效文件（已跳过）：' + [...missing].join(', '));
-const bgm = info.meta.bgm && path.join(projDir, info.meta.bgm);
-if (bgm && fs.existsSync(bgm)) {
-  const k = inputs.length / 2 + 1; inputs.push('-i', bgm);
-  const len = to - from;
-  filters.push(`[${k}:a]aresample=48000,aformat=channel_layouts=stereo,atrim=${from}:${to},asetpts=PTS-STARTPTS,volume=${info.meta.bgmGain ?? .35},afade=t=out:st=${Math.max(0, len - 2.5)}:d=2.5[bgm]`);
+// 配乐：meta.bgm（自己的音乐文件）优先；否则按 meta.music 自动生成（"piano" 默认 | "ambient" | "none" 不要配乐）
+let music = info.meta.bgm ? path.join(projDir, info.meta.bgm) : null, musicGain = info.meta.bgmGain ?? .6;
+if (music && !fs.existsSync(music)) { console.warn('  找不到 bgm 文件：' + info.meta.bgm + '，改用自动配乐'); music = null; }
+const style = info.meta.music ?? 'piano';
+if (!music && style !== 'none') {
+  const { makeMusic, writeWav } = await import('./music.mjs');
+  const params = { dur: +info.duration.toFixed(2), style, bpm: info.meta.musicBpm ?? 72,
+    seed: info.meta.musicSeed ?? [...name].reduce((h, ch) => (h * 31 + ch.codePointAt(0)) >>> 0, 7) % 1000,
+    accents: info.beats.filter(b => b.type === 'title').map(b => +b.start.toFixed(2)) };
+  music = path.join(outDir, '.music.wav'); const key = path.join(outDir, '.music.json');
+  if (!fs.existsSync(music) || !fs.existsSync(key) || fs.readFileSync(key, 'utf8') !== JSON.stringify(params)) {
+    writeWav(music, makeMusic(params)); fs.writeFileSync(key, JSON.stringify(params));
+  }
+  musicGain = info.meta.musicGain ?? 1;
+}
+if (music) {
+  const k = inputs.length / 2 + 1; inputs.push('-i', music);
+  const len = to - from, fadeOwn = info.meta.bgm ? `,afade=t=out:st=${Math.max(0, len - 2.5)}:d=2.5` : '';
+  filters.push(`[${k}:a]aresample=48000,aformat=channel_layouts=stereo,atrim=${from}:${to},asetpts=PTS-STARTPTS,volume=${musicGain}${fadeOwn}[bgm]`);
   labels.push('[bgm]');
 }
 const dur = (to - from).toFixed(3);
 if (labels.length) {
-  filters.push(`${labels.join('')}amix=inputs=${labels.length}:normalize=0:dropout_transition=0,alimiter=limit=0.89,apad[aout]`);
+  filters.push(`${labels.join('')}amix=inputs=${labels.length}:normalize=0:dropout_transition=0,loudnorm=I=-16:TP=-1.5:LRA=11,aresample=48000,apad[aout]`);
   await run('ffmpeg', ['-y', '-v', 'error', '-i', silent, ...inputs, '-filter_complex', filters.join(';'), '-map', '0:v', '-map', '[aout]',
     '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k', '-t', dur, '-movflags', '+faststart', final]);
 } else {

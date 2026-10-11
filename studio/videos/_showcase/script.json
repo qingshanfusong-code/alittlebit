@@ -1,23 +1,96 @@
 {
-  "meta": { "title": "风格样片：五种色调与组件", "theme": "night", "brand": "听劝的拉格朗日", "chapter": false },
+  "meta": {
+    "title": "风格样片：五种色调与组件",
+    "theme": "ember",
+    "brand": "听劝的拉格朗日",
+    "chapter": false
+  },
   "beats": [
-    { "id": "n1", "scene": "party", "say": "热闹，只是一层**滤镜**。", "hold": 0.6 },
-    { "id": "n2", "say": "曲终人散，滤镜**碎了**。", "hold": 1.2 },
-
-    { "id": "m1", "scene": "puppets", "theme": "mono", "pos": "headline", "say": "为什么上班？\n然后呢？", "hold": 0.8 },
-    { "id": "m2", "pos": "headline", "say": "这一切，都**没有意义**。", "hold": 1.4 },
-    { "id": "mt", "type": "title", "title": "虚无主义", "latin": "Nihilismus", "sub": "尼采 · 1882", "titleStyle": "dots", "by": "" },
-
-    { "id": "a1", "scene": "poem", "theme": "abyss", "say": "这一次，你猜不到。", "en": "This time you can't guess.", "hold": 2.6 },
-
-    { "id": "r1", "scene": "track", "theme": "crimson", "pos": "headline", "say": "人之所以伟大，\n是因为他是一座桥，\n**而不是终点**。", "hold": 1.5,
-      "cite": { "la": "Also sprach Zarathustra", "zh": "《查拉图斯特拉如是说》", "note": "尼采 · 1883", "seal": false } },
-
-    { "id": "p1", "scene": "madman", "theme": "paper", "cite": null, "say": "1882 年，尼采借一个疯子之口喊出：", "hold": 0.4 },
-    { "id": "p2", "hold": 2.2 },
-
-    { "id": "g1", "scene": "dice", "theme": "gilt", "say": "比赛被迫**中断**——桌上的钱，该怎么分？", "hold": 1.6,
-      "era": { "year": 1494, "place": "威尼斯 · 帕乔利" },
-      "cite": { "la": "Summa de Arithmetica", "zh": "《算术大全》", "note": "卢卡·帕乔利 · 1494" } }
+    {
+      "id": "n1",
+      "scene": "party",
+      "say": "热闹，只是一层**滤镜**。",
+      "hold": 0.6
+    },
+    {
+      "id": "n2",
+      "say": "曲终人散，滤镜**碎了**。",
+      "hold": 1.2
+    },
+    {
+      "id": "m1",
+      "scene": "puppets",
+      "theme": "mono",
+      "pos": "headline",
+      "say": "为什么上班？\n然后呢？",
+      "hold": 0.8
+    },
+    {
+      "id": "m2",
+      "pos": "headline",
+      "say": "这一切，都**没有意义**。",
+      "hold": 1.4
+    },
+    {
+      "id": "mt",
+      "type": "title",
+      "title": "虚无主义",
+      "latin": "Nihilismus",
+      "sub": "尼采 · 1882",
+      "titleStyle": "dots",
+      "by": ""
+    },
+    {
+      "id": "a1",
+      "scene": "poem",
+      "theme": "gilt",
+      "say": "这一次，你猜不到。",
+      "en": "This time you can't guess.",
+      "hold": 2.6
+    },
+    {
+      "id": "r1",
+      "scene": "track",
+      "theme": "crimson",
+      "pos": "headline",
+      "say": "人之所以伟大，\n是因为他是一座桥，\n**而不是终点**。",
+      "hold": 1.5,
+      "cite": {
+        "la": "Also sprach Zarathustra",
+        "zh": "《查拉图斯特拉如是说》",
+        "note": "尼采 · 1883",
+        "seal": false
+      },
+      "floor": false
+    },
+    {
+      "id": "p1",
+      "scene": "madman",
+      "theme": "paper",
+      "cite": null,
+      "say": "1882 年，尼采借一个疯子之口喊出：",
+      "hold": 0.4
+    },
+    {
+      "id": "p2",
+      "hold": 2.2
+    },
+    {
+      "id": "g1",
+      "scene": "dice",
+      "theme": "gilt",
+      "say": "比赛被迫**中断**——桌上的钱，该怎么分？",
+      "hold": 1.6,
+      "era": {
+        "year": 1494,
+        "place": "威尼斯 · 帕乔利"
+      },
+      "cite": {
+        "la": "Summa de Arithmetica",
+        "zh": "《算术大全》",
+        "note": "卢卡·帕乔利 · 1494"
+      },
+      "floor": true
+    }
   ]
 }

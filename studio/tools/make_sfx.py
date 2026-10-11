@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-"""生成基础音效库（纯 numpy 合成，无版权问题）→ studio/sfx/*.wav
+"""生成柔和版基础音效库（纯 numpy 合成，无版权问题）→ studio/sfx/*.wav
 
-这些是“够用”的占位音效。想要更精致的质感，可以把同名文件替换成
-自己下载的素材（如 Pixabay / 爱给网的免版权音效），引擎按文件名调用：
-  tick 字符滚动/计数   whoosh 转场/飞散   shimmer 标题出现   boom 重音/反转
-  stamp 盖章           shatter 玻璃碎裂   crack 裂纹         riser 悬念上升
-  heart 心跳（低频双击）
+设计原则（配合舒缓配乐）：低频、圆润、短；不用白噪声爆破，全部过 3.8kHz 双极低通，
+所以不会“刺耳、吵”。想要更好的质感，可以把同名文件替换成自己的素材，引擎按文件名调用：
+  tick 轻木质点击      whoosh 柔和气流     shimmer 标题钟片    boom 低频绽放（反转）
+  stamp 闷声落章       shatter 玻璃轻响     crack 细微裂响      riser 轻微上升
+  heart 心跳
 项目里也可以放 videos/<名>/sfx/<同名>.wav 覆盖全局音效。
+默认（meta.sfx = "soft"）只会自动用到 shimmer / stamp / shatter，其余要手动 c.sfx() 才会响。
 """
 import os, wave
 import numpy as np
@@ -20,25 +21,6 @@ def t_axis(sec):
     return np.arange(int(SR * sec)) / SR
 
 
-def env_exp(sec, decay):
-    return np.exp(-t_axis(sec) / decay)
-
-
-def biquad_bp(x, f0, q):
-    """时变带通（f0 可为数组）。"""
-    f0 = np.broadcast_to(np.asarray(f0, dtype=float), x.shape)
-    y = np.zeros_like(x)
-    x1 = x2 = y1 = y2 = 0.0
-    for i in range(len(x)):
-        w = 2 * np.pi * f0[i] / SR
-        alpha = np.sin(w) / (2 * q)
-        b0, b2, a0, a1, a2 = alpha, -alpha, 1 + alpha, -2 * np.cos(w), 1 - alpha
-        yi = (b0 * x[i] + b2 * x2 - a1 * y1 - a2 * y2) / a0
-        x2, x1, y2, y1 = x1, x[i], y1, yi
-        y[i] = yi
-    return y
-
-
 def lowpass(x, fc):
     a = np.exp(-2 * np.pi * fc / SR)
     y = np.zeros_like(x)
@@ -49,9 +31,23 @@ def lowpass(x, fc):
     return y
 
 
-def reverb(x, sec=1.4, decay=0.45, mix=0.25):
-    ir = rng.standard_normal(int(SR * sec)) * env_exp(sec, decay)
-    ir = lowpass(ir, 5000)
+def bandpass(x, f0, q):
+    """时变带通（f0 可为数组）。"""
+    f0 = np.broadcast_to(np.asarray(f0, dtype=float), x.shape)
+    y = np.zeros_like(x)
+    x1 = x2 = y1 = y2 = 0.0
+    for i in range(len(x)):
+        w = 2 * np.pi * f0[i] / SR
+        al = np.sin(w) / (2 * q)
+        b0, b2, a0, a1, a2 = al, -al, 1 + al, -2 * np.cos(w), 1 - al
+        yi = (b0 * x[i] + b2 * x2 - a1 * y1 - a2 * y2) / a0
+        x2, x1, y2, y1 = x1, x[i], y1, yi
+        y[i] = yi
+    return y
+
+
+def reverb(x, sec=1.6, decay=0.5, mix=0.3):
+    ir = lowpass(lowpass(rng.standard_normal(int(SR * sec)) * np.exp(-t_axis(sec) / decay), 2500), 2500)
     n = len(x) + len(ir)
     wet = np.fft.irfft(np.fft.rfft(x, n) * np.fft.rfft(ir, n), n)
     wet /= np.max(np.abs(wet)) + 1e-9
@@ -60,22 +56,27 @@ def reverb(x, sec=1.4, decay=0.45, mix=0.25):
     return out * (1 - mix) + wet * mix
 
 
-def fade(x, ms_in=2, ms_out=30):
-    n_in, n_out = int(SR * ms_in / 1000), int(SR * ms_out / 1000)
-    x = x.copy()
-    if n_in:
-        x[:n_in] *= np.linspace(0, 1, n_in)
-    if n_out:
-        x[-n_out:] *= np.linspace(1, 0, n_out)
-    return x
+def tone(freq, sec, decay, attack=0.004, harm=(1.0,)):
+    t = t_axis(sec)
+    s = sum(a * np.sin(2 * np.pi * freq * (k + 1) * t) for k, a in enumerate(harm))
+    return s * (1 - np.exp(-t / attack)) * np.exp(-t / decay)
 
 
-def save(name, x, peak=0.7):
+def place(dst, src, at):
+    i = int(at * SR)
+    n = min(len(src), len(dst) - i)
+    dst[i:i + n] += src[:n]
+
+
+def save(name, x, peak=0.5):
+    x = lowpass(lowpass(x, 3800), 3800)                 # 统一去掉刺耳的高频（12dB/oct）
     x = x / (np.max(np.abs(x)) + 1e-9)
-    loud = np.nonzero(np.abs(x) > 0.004)[0]          # 去掉混响尾巴里听不见的部分
+    loud = np.nonzero(np.abs(x) > 0.004)[0]
     x = x[: loud[-1] + int(SR * 0.05)] if len(loud) else x
-    x = fade(x)
-    x = x / (np.max(np.abs(x)) + 1e-9) * peak
+    n_in, n_out = int(SR * 0.003), int(SR * 0.04)
+    x[:n_in] *= np.linspace(0, 1, n_in)
+    x[-n_out:] *= np.linspace(1, 0, n_out)
+    x *= peak
     os.makedirs(OUT, exist_ok=True)
     with wave.open(os.path.join(OUT, name + ".wav"), "wb") as w:
         w.setnchannels(1)
@@ -85,87 +86,65 @@ def save(name, x, peak=0.7):
     print(f"  sfx/{name}.wav  {len(x) / SR:.2f}s")
 
 
-def tick():
-    t = t_axis(0.06)
-    click = rng.standard_normal(len(t)) * env_exp(0.06, 0.004)
-    tone = np.sin(2 * np.pi * 2300 * t) * env_exp(0.06, 0.012) * 0.6
-    return biquad_bp(click, 3200, 1.2) + tone
+def tick():          # 轻木质“哒”
+    return tone(620, 0.12, 0.022, 0.002, (1.0, 0.25, 0.08))
 
 
-def whoosh():
-    sec = 1.1
+def whoosh():        # 柔和气流
+    sec = 1.4
     t = t_axis(sec)
-    n = rng.standard_normal(len(t))
-    sweep = 350 + 2600 * np.sin(np.pi * np.clip(t / sec, 0, 1)) ** 2
-    env = np.sin(np.pi * np.clip(t / sec, 0, 1)) ** 1.6
-    return biquad_bp(n, sweep, 0.9) * env
+    p = np.clip(t / sec, 0, 1)
+    air = bandpass(rng.standard_normal(len(t)), 260 + 700 * np.sin(np.pi * p) ** 2, 0.7)
+    return lowpass(lowpass(air * np.sin(np.pi * p) ** 2, 1100), 1100)
 
 
-def shimmer():
-    sec = 3.2
+def shimmer():       # 标题：几片柔和的钟片
+    x = np.zeros(int(SR * 3.0))
+    for k, f in enumerate([659.3, 784.0, 987.8, 1174.7]):
+        place(x, tone(f, 2.6, 0.9, 0.015, (1.0, 0.18)) * (0.9 - 0.12 * k), 0.02 + k * 0.09)
+    return reverb(x, 2.0, 0.7, 0.35)
+
+
+def boom():          # 反转：低频绽放，不是爆炸
+    sec = 3.0
     t = t_axis(sec)
-    x = np.zeros_like(t)
-    notes = [1318.5, 1568.0, 1975.5, 2637.0, 3136.0, 3951.1, 2093.0, 2637.0]
-    for k, f in enumerate(notes):
-        on = 0.05 + k * 0.07 + rng.uniform(0, 0.03)
-        tt = np.clip(t - on, 0, None)
-        e = (t >= on) * np.exp(-tt / 1.1) * (1 - np.exp(-tt / 0.004))
-        x += np.sin(2 * np.pi * f * (1 + 0.0015 * np.sin(2 * np.pi * 5 * tt)) * tt) * e * (0.5 + 0.5 * rng.random())
-    air = biquad_bp(rng.standard_normal(len(t)), 7000, 0.7) * np.exp(-t / 0.9) * 0.15
-    return reverb(x + air, 2.2, 0.8, 0.35)
+    env = (1 - np.exp(-t / 0.25)) * np.exp(-t / 1.1)
+    x = (np.sin(2 * np.pi * 55 * t) + 0.35 * np.sin(2 * np.pi * 110 * t) + 0.2 * np.sin(2 * np.pi * 164.8 * t)) * env
+    return reverb(x, 2.0, 0.7, 0.3)
 
 
-def boom():
+def stamp():         # 闷声落章
+    sec = 0.6
+    t = t_axis(sec)
+    body = np.sin(2 * np.pi * (58 + 30 * np.exp(-t / 0.03)) * t) * np.exp(-t / 0.09)
+    paper = lowpass(rng.standard_normal(len(t)), 700) * np.exp(-t / 0.012) * 1.5
+    return lowpass(body + paper, 900)
+
+
+def crack():         # 细微裂响
+    x = np.zeros(int(SR * 0.3))
+    for at in (0.0, 0.05, 0.11):
+        place(x, tone(1400 + rng.uniform(-200, 200), 0.08, 0.012, 0.001), at)
+    return x
+
+
+def shatter():       # 玻璃轻响：稀疏的叮当，而不是爆裂
+    x = np.zeros(int(SR * 2.2))
+    place(x, lowpass(rng.standard_normal(int(SR * 0.4)), 1200) * np.exp(-t_axis(0.4) / 0.08) * 0.6, 0)
+    for _ in range(14):
+        at = rng.exponential(0.16)
+        if at < 0.8:
+            place(x, tone(rng.uniform(1200, 2600), 1.0, rng.uniform(0.15, 0.4), 0.003) * rng.uniform(0.2, 0.5), at)
+    return reverb(x, 1.4, 0.4, 0.25)
+
+
+def riser():         # 轻微上升
     sec = 2.4
     t = t_axis(sec)
-    f = 38 + 50 * np.exp(-t / 0.25)
-    body = np.sin(2 * np.pi * np.cumsum(f) / SR) * env_exp(sec, 0.7)
-    hit = lowpass(rng.standard_normal(len(t)) * env_exp(sec, 0.03), 900) * 3
-    return reverb(body + hit, 2.0, 0.7, 0.3)
-
-
-def stamp():
-    sec = 0.5
-    t = t_axis(sec)
-    thump = np.sin(2 * np.pi * (95 + 60 * np.exp(-t / 0.03)) * t) * env_exp(sec, 0.07)
-    slap = biquad_bp(rng.standard_normal(len(t)), 1800, 0.8) * env_exp(sec, 0.012) * 1.4
-    return reverb(thump + slap, 0.6, 0.15, 0.15)
-
-
-def crack():
-    sec = 0.35
-    t = t_axis(sec)
-    x = rng.standard_normal(len(t)) * env_exp(sec, 0.006) * 1.5
-    for _ in range(6):
-        on = rng.uniform(0.01, 0.2)
-        tt = np.clip(t - on, 0, None)
-        x += (t >= on) * rng.standard_normal(len(t)) * np.exp(-tt / 0.003) * 0.6
-    return biquad_bp(x, 4200, 0.7)
-
-
-def shatter():
-    sec = 2.0
-    t = t_axis(sec)
-    x = lowpass(rng.standard_normal(len(t)), 3000) * env_exp(sec, 0.05) * 1.2
-    for _ in range(70):
-        on = 0.005 + rng.exponential(0.18)
-        if on > 1.2:
-            continue
-        tt = np.clip(t - on, 0, None)
-        f = rng.uniform(2500, 9000)
-        x += (t >= on) * np.sin(2 * np.pi * f * tt) * np.exp(-tt / rng.uniform(0.02, 0.15)) * rng.uniform(0.15, 0.6)
-    x += biquad_bp(rng.standard_normal(len(t)), 6000, 0.6) * env_exp(sec, 0.25) * 0.5
-    return reverb(x, 1.2, 0.35, 0.2)
-
-
-def riser():
-    sec = 2.2
-    t = t_axis(sec)
     p = t / sec
-    f = 180 * 2 ** (p * 2.5)
-    tone = np.sin(2 * np.pi * np.cumsum(f) / SR) * p ** 2 * 0.5
-    air = biquad_bp(rng.standard_normal(len(t)), 500 + 5000 * p ** 2, 1.0) * p ** 2.2
-    return tone + air
+    f = 220 * 2 ** (p * 1.0)
+    x = (np.sin(2 * np.pi * np.cumsum(f) / SR) + 0.5 * np.sin(2 * np.pi * np.cumsum(f * 1.5) / SR)) * p ** 2
+    return lowpass(x, 1500)
 
 
 def heart():

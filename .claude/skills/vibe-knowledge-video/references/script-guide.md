@@ -39,11 +39,14 @@
 {
   "meta": {
     "title": "最速降线",           // 项目名（也用作渲染时的标题）
-    "theme": "abyss",              // night | crimson | mono | abyss | gilt（见 style-dna 第 4 节）
+    "theme": "gilt",               // 默认 gilt（黑棕鎏金 + 桌面）；ember | crimson | mono（见 style-dna 第 4 节）；不要用蓝色的 night/abyss
     "brand": "听劝的拉格朗日",      // 右上角水印，标题卡下方显示“— X 出品 —”
     "fps": 30,
-    // 可选：subPos 默认字幕位置 bottom|headline|center；titleStyle "dots"；chapter false 关闭章节标签；
-    //       chapterStyle "bracket" 显示成【标题】；bgm "music.mp3" + bgmGain 0.35（一般不用，BGM 在抖音里加）
+    // 声音（都可以不写，用默认值）：
+    //   music "piano"（默认自动配乐）| "ambient" | "none"；musicSeed 换旋律；bgm "x.mp3" 用自己的音乐
+    //   sfx "soft"（默认，只在标题/盖章/碎裂有轻音效）| "off" | "manual" | "full"
+    // 其他可选：subPos 默认字幕位置 bottom|headline|center；titleStyle "dots"；chapter false 关闭章节标签；
+    //       chapterStyle "bracket" 显示成【标题】；floor true/false 强制开关桌面地板
   },
   "beats": [
     {
@@ -75,11 +78,12 @@
 - 标题卡默认 4.6 秒。
 - `era` / `cite` / `chapter` 会一直保留，直到后面某个节拍把它改掉，或者设成 `null` 关掉。
 - `"theme": "paper"` 写在某个节拍上，就会在那一拍闪白并反转成白底（高潮用）；之后在另一个节拍上写 `"theme": "abyss"` 可以切回来。
+- `"floor": false` / `true` 写在某个节拍上，会在那一拍切换桌面地板（跑道、自带地面的场景要关掉）。
 - `"enter": "cut"` 写在某个场景的第一个节拍上，表示硬切进入（默认是 0.8 秒交叉淡化）。全片最多用两次。
 
 ## 4. 交付前自查（第二步结束时）
 
-1. 运行 `node tools/render.mjs videos/<名> --timing`，看总时长和每拍时长。这是纯文本，不出图，很省。
+1. 运行 `node studio/tools/render.mjs videos/<名> --timing`，看总时长和每拍时长。这是纯文本，不出图，很省。
 2. 对照 style-dna 第 2 节：第 10 秒前出现标题卡吗？有反转吗？结尾回扣开头了吗？
 3. 每个节拍都有 `v`，每个场景都有一个**贯穿的视觉隐喻**。
 4. 把文案（按节拍列出 `say`）和时长表一起给用户确认。**文案定稿之前不进入第三步**。改文案几乎不花 token，改画面很贵。
