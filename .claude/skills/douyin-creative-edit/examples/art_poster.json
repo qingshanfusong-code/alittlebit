@@ -1,0 +1,31 @@
+{
+  "_about": "Style B (ref 2) 艺术海报动态, 16:9. No hard cuts: one composition moved by a virtual camera, thin type arriving on beats, Bauhaus blocks, a red thread line, defocus transition, a drifting ornament. Good for brand/perfume/art/poetry.",
+  "canvas": {"preset": "16:9", "fps": 30, "bg": "#1d3f6e"},
+  "audio": {"path": "music.wav", "fade_in": 0.5, "fade_out": 1.2},
+  "beats": "music.beats.json",
+  "duration": "b20",
+  "layers": [
+    {"group": [
+       {"color": "#1d3f6e"},
+       {"macro": "blocks", "start": "b4", "end": "b12", "count": 3, "at": "1b", "palette": ["#c9a46a", "#a3252a", "#163256"], "seed": 5},
+       {"image": "cutouts/bottle.png", "fit": "contain", "box": [0.52, 0.08, 0.36, 0.9],
+        "effects": [{"type": "shadow", "dy": 0.02, "blur": 0.04}], "anim": [{"name": "float", "amount": 0.008, "period": 4}]},
+       {"macro": "lyrics", "style": "staircase", "start": "b0", "end": "b12", "x": 0.22, "y": 0.24, "step": [0.06, 0.17],
+        "items": [{"text": "bergamot", "at": "b0"}, {"text": "iris", "at": "b2"}, {"text": "musk", "at": "b4"}, {"text": "& you", "at": "b6"}],
+        "subtitle": "你 真 的 存 在 吗", "size": 0.09}
+     ],
+     "start": 0, "end": "b12",
+     "scale": [[0, 1.0], ["b12", 1.15, "inout"]], "y": [[0, 0.5], ["b12", 0.58, "inout"]],
+     "exit": {"type": "blur", "dur": "2b", "amount": 0.05}},
+    {"color": "#0b1424", "start": "b10", "end": "b20", "opacity": [["b10", 0], ["b12", 1], ["b14", 1], ["b16", 0.0]]},
+    {"image": "cutouts/bottle.png", "fit": "contain", "box": [0.05, 0.1, 0.4, 0.85], "start": "b12", "end": "b20",
+     "enter": {"type": "blur", "dur": "2b", "amount": 0.06}, "anim": [{"name": "drift", "dir": "right", "amount": 0.03}]},
+    {"text": "MAISON  ·  NO.7", "font": "light", "size": 0.03, "tracking": 0.6, "color": "#d8b46a", "x": 0.66, "y": 0.47,
+     "start": "b13", "end": "b20", "anim": [{"name": "fade_in", "dur": "2b"}]},
+    {"text": "你 真 的 出 现 过 吗", "font": "cjk_sans", "size": 0.018, "tracking": 0.8, "color": "#d8b46a", "x": 0.66, "y": 0.54,
+     "start": "b14", "end": "b20", "anim": [{"name": "fade_in", "dur": "2b"}]},
+    {"shape": "circle", "r": 0.07, "color": "#c9a46a", "start": "b15", "end": "b20",
+     "x": [[0, 0.62], ["end", 0.5, "out"]], "y": [[0, -0.15], ["end", 0.08, "out"]], "anim": [{"name": "spin", "amount": 15}]}
+  ],
+  "post": [{"type": "vignette", "amount": 0.3}, {"type": "grain", "amount": 0.02}]
+}

@@ -1,0 +1,28 @@
+{
+  "_about": "Style F 胶片回忆, 3:4. Polaroids stacking on beats with typewriter dates, slow ken-burns dissolves, a moving light leak (screen blend), 35mm frame + grain, a freeze-frame ending with the date.",
+  "canvas": {"preset": "3:4", "fps": 30, "bg": "#efe6d6"},
+  "audio": {"path": "music.wav", "fade_in": 0.3, "fade_out": 1.5},
+  "beats": "music.beats.json",
+  "duration": "b30",
+  "layers": [
+    {"macro": "sequence", "start": 0, "end": "b12", "cut": "4b", "transition": "fade", "td": "1b",
+     "shots": [{"image": "photos/p5.jpg", "anim": ["ken_burns"]}, {"image": "photos/p1.jpg", "anim": [{"name": "ken_burns", "pan_x": -0.03}]},
+               {"video": "clips/c2.mp4", "anim": ["zoom_out"]}]},
+    {"macro": "lyrics", "style": "typewriter", "font": "mono", "size": 0.032, "color": "#fff6e5", "y": 0.86,
+     "shadow": {"dy": 0.04, "blur": 0.1}, "items": [{"text": "2023.09  第一次见面", "at": "b0"},
+     {"text": "2024.05  一起看海", "at": "b4"}, {"text": "2025.12  第一场雪", "at": "b8", "to": "b12"}], "type_dur": "2b"},
+    {"gradient": {"colors": ["#00000000", "#ff9a3c", "#ffd36b00"], "angle": 30}, "blend": "screen", "start": "b3", "end": "b7",
+     "opacity": [[0, 0], ["b4", 0.55], ["b6", 0.3], ["end", 0]], "x": [[0, 0.3], ["end", 0.75]]},
+    {"color": "#efe6d6", "start": "b12", "end": "b26"},
+    {"macro": "collage", "start": "b12", "end": "b26", "at": "1b", "layout": "stack", "size": 0.66, "rotate": 9, "seed": 11,
+     "border": 0.018, "border_bottom": 0.07, "border_color": "#fbf8f1", "items": ["photos/*.jpg", "clips/c1.mp4"]},
+    {"macro": "lyrics", "style": "typewriter", "font": "mono", "size": 0.03, "color": "#3a2f25", "y": 0.92, "start": "b12",
+     "items": [{"text": "我们的 2026", "at": "b13", "to": "b26"}], "type_dur": "2b"},
+    {"image": "photos/p1.jpg", "start": "b26", "end": "b30", "enter": {"type": "flash", "dur": 0.3},
+     "effects": [{"type": "grade", "preset": "bw_soft"}]},
+    {"text": "2026.06.18", "font": "mono", "size": 0.05, "color": "#ffffff", "y": 0.82, "start": "b27", "end": "b30",
+     "anim": [{"name": "typewriter", "dur": "1b"}]}
+  ],
+  "post": [{"type": "grade", "preset": "film"}, {"type": "grain", "amount": 0.05}, {"type": "vignette", "amount": 0.3},
+           {"type": "film_frame", "style": "35mm", "label": "35MM  24  ▸ 25"}]
+}

@@ -1,0 +1,40 @@
+{
+  "_about": "Style A (ref 1) 海报歌词排版 MV, 16:9. Fixed subject while worlds swap on the beat, ghost words behind, font-flicker burst on the drop, bilingual pun, loop back to the opening. Run: render.py examples/poster_typography.json --base <demo or your folder>",
+  "canvas": {"preset": "16:9", "fps": 30, "bg": "#000000"},
+  "audio": {"path": "music.wav", "fade_out": 0.8},
+  "beats": "music.beats.json",
+  "duration": "b26",
+  "layers": [
+    {"macro": "bg_swap", "start": 0, "end": "b8", "cut": "1b", "order": "given",
+     "backgrounds": ["photos/p1.jpg", "clips/c1.mp4", "photos/p2.jpg", "clips/c5.mp4", "photos/p3.jpg", "clips/c2.mp4", "photos/p4.jpg", "photos/p5.jpg"],
+     "bg_effects": [{"type": "grade", "preset": "vivid"}],
+     "between": [{"macro": "lyrics", "style": "poster_stack", "end": "b8", "accent": "#e3262e",
+                  "items": [{"text": "take", "right": "me", "at": 0}, {"text": "moon", "left": "to the", "at": "b2"},
+                            {"text": "where", "at": "b4"}, {"text": "fall", "left": "we", "right": "in", "at": "b6"}]}],
+     "foreground": {"image": "cutouts/person_on_rock.png", "fit": "contain", "box": [0.28, 0.3, 0.44, 0.7]}},
+
+    {"video": "clips/c3.mp4", "start": "b8", "end": "b12", "effects": [{"type": "grade", "preset": "night_neon"}, {"type": "adjust", "brightness": 0.6}]},
+    {"macro": "lyrics", "style": "stack", "start": "b8", "end": "b12", "x": 0.5, "y": 0.18, "size": 0.026, "color": "#ffffffaa", "line_gap": 0.05,
+     "items": ["take me far beyond the cloudy sky and fly me all the way", "to the silent glowing moon, let me gently float",
+               "inside your endless hazy midnight ocean of soft neon blue", "all the noisy static noise and chaotic sounds slowly fade",
+               "the endless starry night is softly glowing bright"], "cut": "0.5b"},
+    {"macro": "collage", "start": "b8", "end": "b12", "at": "0.5b", "layout": "scatter", "size": 0.3, "rotate": 4, "seed": 7,
+     "items": ["photos/p2.jpg", "photos/p6.jpg", "clips/c7.mp4", "photos/p4.jpg"]},
+    {"text": "MOON", "font": "condensed", "size": 0.06, "color": "#e3262e", "x": 0.88, "y": 0.08, "start": "b8", "end": "b12"},
+
+    {"macro": "montage", "start": "b12", "end": "b16", "cut": "0.5b", "clips": ["clips/*.mp4"], "order": "shuffle", "seed": 3,
+     "effects": [{"type": "grade", "preset": "vivid"}], "anim": ["punch_in"]},
+    {"macro": "montage", "start": "b16", "end": "b22", "cut": "0.25b", "clips": ["clips/*.mp4", "photos/*.jpg"], "order": "hue",
+     "effects": [{"type": "grade", "preset": "vivid"}]},
+    {"macro": "lyrics", "style": "font_cycle", "start": "b16", "end": "b22", "cycle": "0.25b", "items": ["love"]},
+
+    {"macro": "chapter", "style": "bilingual", "title": "失了", "latin": "LOST", "start": "b22", "end": "b23", "bg": "#000000"},
+    {"image": "photos/p1.jpg", "start": "b23", "end": "b26", "enter": {"type": "iris", "dur": "1b"}, "effects": [{"type": "grade", "preset": "vivid"}]},
+    {"macro": "lyrics", "style": "poster_stack", "start": "b23", "end": "b26", "accent": "#e3262e", "anim": ["punch_in"],
+     "items": [{"text": "take", "right": "me"}]},
+    {"image": "cutouts/person_on_rock.png", "fit": "contain", "box": [0.28, 0.3, 0.44, 0.7], "start": "b23", "end": "b26"}
+  ],
+  "beat_fx": [{"type": "punch", "at": {"every": "1b", "from": "b0", "to": "b8"}, "amount": 0.03},
+              {"type": "flash", "at": ["b16"], "amount": 0.9, "decay": 0.12}],
+  "post": [{"type": "grain", "amount": 0.03}, {"type": "vignette", "amount": 0.25}]
+}

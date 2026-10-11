@@ -1,0 +1,26 @@
+{
+  "_about": "Style D (ref 4) 慢门快闪, 16:9. Triptych title with letters landing, colour-ordered flash montage of long-exposure smears (shutter + trails), holds between bursts, B&W print-border coda, tiny credit card.",
+  "canvas": {"preset": "16:9", "fps": 30, "bg": "#000000"},
+  "audio": {"path": "music.wav", "fade_out": 1.0},
+  "beats": "music.beats.json",
+  "duration": "b30",
+  "layers": [
+    {"macro": "split", "start": 0, "end": "b6", "layout": "cols", "stagger": "1b", "gap": 0.0, "anim": "stretch",
+     "panels": [{"video": "clips/c3.mp4", "shutter": 0.3, "effects": ["bw", {"type": "threshold", "level": 0.4}]},
+                {"color": "#000000"},
+                {"video": "clips/c7.mp4", "shutter": 0.3, "effects": [{"type": "grade", "preset": "night_neon"}]}]},
+    {"macro": "lyrics", "style": "letters", "start": "b2", "end": "b6", "items": ["SLOW SHUTTER"], "font": "sans_bold",
+     "size": 0.085, "reveal": "2b"},
+    {"macro": "montage", "start": "b6", "end": "b16", "pattern": [0.5, 0.5, 0.25, 0.25, 0.5, 2],
+     "clips": ["clips/*.mp4"], "order": "hue", "shutter": 0.25,
+     "effects": [{"type": "trails", "decay": 0.85}, {"type": "grade", "preset": "night_neon"}]},
+    {"macro": "montage", "start": "b16", "end": "b22", "cut": "0.25b", "clips": ["clips/*.mp4"], "order": "hue", "seed": 9,
+     "shutter": 0.15, "effects": [{"type": "trails", "decay": 0.8}, {"type": "grade", "preset": "night_neon"}]},
+    {"macro": "montage", "start": "b22", "end": "b28", "cut": "1b", "clips": ["clips/c3.mp4", "clips/c6.mp4", "clips/c4.mp4"],
+     "shutter": 0.4, "box": [0.08, 0.1, 0.84, 0.8], "effects": [{"type": "grade", "preset": "bw_contrast"}]},
+    {"text": "© 2026 YOUR NAME  ·  ALL RIGHTS RESERVED", "font": "sans", "size": 0.016, "tracking": 0.3, "color": "#bbbbbb",
+     "start": "b28", "end": "b30", "anim": ["fade_in"]}
+  ],
+  "beat_fx": [{"type": "flash", "at": {"every": "2b", "from": "b6", "to": "b22"}, "amount": 0.3, "decay": 0.08}],
+  "post": [{"type": "film_frame", "style": "print"}, {"type": "grain", "amount": 0.05}]
+}

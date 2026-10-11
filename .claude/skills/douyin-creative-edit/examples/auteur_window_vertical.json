@@ -1,0 +1,28 @@
+{
+  "_about": "Style C (ref 3) 导演美学混剪, 9:16. Script title card, picture shrinks into a mint window frame with shots swapping on the beat, round porthole on a red plate with slit transitions, split panels, polaroid collage, Wes-style chapter cards, pastel grade.",
+  "canvas": {"preset": "9:16", "fps": 30, "bg": "#f3ead8"},
+  "audio": {"path": "music.wav", "fade_out": 0.8},
+  "beats": "music.beats.json",
+  "duration": "b30",
+  "layers": [
+    {"macro": "chapter", "style": "script", "title": "A Pastel Week", "sub": "a little film", "start": 0, "end": "b4",
+     "bg": "#e9b949", "color": "#3a2a1a", "y": 0.42},
+    {"macro": "window", "start": "b4", "end": "b12", "frame_color": "#a9d6c2", "inset": 0.1, "cut": "2b",
+     "shots": ["clips/c1.mp4", "photos/p2.jpg", "clips/c5.mp4", "photos/p5.jpg"],
+     "border": {"width": 0.006, "color": "#f6f1e4"}},
+    {"macro": "chapter", "title": "Local Color", "sub": "section one", "note": "(pages 1-8)", "start": "b5", "end": "b12",
+     "y": 0.055, "color": "#2d2a26"},
+    {"macro": "window", "start": "b12", "end": "b18", "shape": "circle", "frame_color": "#b5222b", "inset": 0.06,
+     "cut": "2b", "transition": "strip", "td": "1b",
+     "shots": ["photos/p1.jpg", "clips/c2.mp4", "photos/p6.jpg"], "border": {"width": 0.012, "color": "#f2c9b1"}},
+    {"text": "第二章 · 小镇", "font": "cjk_serif", "size": 0.035, "tracking": 0.4, "color": "#f6e7d8", "y": 0.86,
+     "start": "b12", "end": "b18", "anim": [{"name": "fade_in", "dur": "1b"}]},
+    {"macro": "split", "start": "b18", "end": "b24", "layout": "rows", "stagger": "1b", "gap": 0.006, "gap_color": "#f3ead8",
+     "panels": [{"image": "photos/p3.jpg"}, {"video": "clips/c8.mp4"}, {"image": "photos/p4.jpg"}]},
+    {"color": "#f3ead8", "start": "b24", "end": "b30"},
+    {"macro": "collage", "start": "b24", "end": "b30", "at": "0.5b", "layout": "scatter", "size": 0.55, "seed": 3,
+     "border_bottom": 0.05, "items": ["photos/*.jpg"]},
+    {"macro": "chapter", "title": "The End", "sub": "thanks for watching", "start": "b28", "end": "b30", "y": 0.9, "color": "#2d2a26"}
+  ],
+  "post": [{"type": "grade", "preset": "wes_pastel"}, {"type": "grain", "amount": 0.025}]
+}
